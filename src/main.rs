@@ -10,20 +10,25 @@ use std::time::Duration;
 use threadpool::ThreadPool;
 
 fn main() {
+    //let path = env::current_dir().unwrap();
+    //print!("Current server location {} \n", path.as_path().display());
+    // Obtiene numero procesadores logicos
     let core_count = num_cpus::get();
-    print!("Starting server with {} thread max\n", core_count);
-    let path = env::current_dir().unwrap();
-    print!("Current server location {} \n", path.as_path().display());
-    let n_workers = core_count;
+    let workers_per_core= 4;
+    // Calcula trabajos por procasador logico
+    let n_workers = core_count * workers_per_core;
+    // Inicia piscina de trabajos limitada
     let pool = ThreadPool::new(n_workers);
-
+    print!("Starting server with {} thread max\n", core_count);
+    // Bind de la direccion tcp
     let listener = TcpListener::bind("127.0.0.1:80").unwrap();
-
+    // Bucle para cada peticion tcp
     for stream in listener.incoming() {
+        // Canal de datos tcp
         let stream = stream.unwrap();
-
+        // Inicia el trabajo en otro hilo su hay tareas disponibles, ni no, espera a que alguna finalize
         pool.execute(move || {
-            //Launch handle_conection in new thread
+            // Hace cosas
             handle_connection(stream);
         });
     }
