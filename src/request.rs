@@ -6,17 +6,19 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn parse(& mut self, buffer: &[u8]) {
+    pub fn parse(buffer: &[u8]) -> Request {
+        let mut req = Request::default();
 
-        let request_str = String::from_utf8_lossy(&buffer[..]);
+        let raw = String::from_utf8_lossy(&buffer).to_string().replace("\u{0}", "");
 
-        let request_arr:Vec<_> = request_str.splitn(3, ' ').collect();
+        let request_arr:Vec<_> = raw.splitn(3, ' ').collect();
 
-        self.method = request_arr[0].to_string();
-        self.path = percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8().unwrap().to_string();
+        req.method = request_arr[0].to_string();
+        req.path = percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8().unwrap().to_string();
         let mut client = Client::default();
         client.parse(request_arr[2]);
-        self.client = client;
+        req.client = client;
+        req
     }
 
     pub fn get_local_path(&self, root_folder:&String) -> String {
@@ -27,7 +29,9 @@ impl Request {
 
 #[derive(Debug, Default)]
 pub struct Client {
-    pub version: String,
+    pub client: String,
+    //Oversimplified For Now
+    /*pub version: String,
     pub browser: String,
     pub connection: String,
     pub cache_control: String,
@@ -38,12 +42,13 @@ pub struct Client {
     pub accept_encoding: String,
     pub accept_anguage: String,
     pub cookie: String,
-    pub other: String,
+    pub other: String,*/
 }
 
 impl Client {
     pub fn parse(& mut self, client_str: &str) {
-        let client_arr:Vec<_> = client_str.splitn(12, "\r\n").collect();
+        self.client = client_str.to_string();
+        /*let client_arr:Vec<_> = client_str.splitn(12, "\r\n").collect();
         self.version = client_arr[0].to_string();
         self.browser = client_arr[1].to_string();
         self.connection = client_arr[2].to_string();
@@ -63,6 +68,6 @@ impl Client {
             self.other = client_arr[11].to_string();
         }else{
             self.other = "".to_string();
-        }
+        }*/
     }
 }

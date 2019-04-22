@@ -6,15 +6,14 @@ extern crate lazy_static;
 extern crate config;
 
 use num_cpus;
-use std::thread;
+//use std::thread;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
-use std::time::Duration;
+// use std::time::Duration;
 use threadpool::ThreadPool;
-use std::collections::HashMap;
 
 // For Config
 mod settings;
@@ -43,11 +42,7 @@ static HTTP_NOT_FOUND:&[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
 static HTTP_OK:&[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 
 fn main() {
-    //let path = env::current_dir().unwrap();
-    //print!("Current server location {} \n", path.as_path().display());
-
     APP_CONFIG.show();
-
     server();
 }
 
@@ -77,52 +72,59 @@ fn server(){
 
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut buffer = [0; 512];
+    // If request buffer is too small it may fail
+    let mut buffer = [0;1024];
     //Parse request data
     stream.read(&mut buffer).unwrap();
     //Prints request info in the
 
-    let mut request = Request::default();
-    request.parse(&buffer);
+    let request = Request::parse(&buffer);
 
     if APP_CONFIG.debug.active {
-        print!("{:?}\n", &request);
+        println!("{:?}", &request);
     }
 
     //"GET / HTTP/1.1\r\n"
     if &request.method == ("GET") {
-        handle_get(stream, request);
+        handle_get(stream, &request);
     } else {
         println!("Unsupported Method: {}", request.method);
         //test2(stream, request);
     }
 }
 
-fn handle_get(mut stream: TcpStream, request: Request){
+fn handle_get(mut stream: TcpStream, request:&Request){
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
-    if fs::metadata(&path).unwrap().is_file(){
-        stream.write(HTTP_OK).unwrap();
+    if std::path::Path::new(&path).exists() {
+        if fs::metadata(&path).unwrap().is_file(){
+            stream.write(HTTP_OK).unwrap();
 
-        // TODO Optimize this, hend filetipe headers and load file in chunks
-        let mut file = File::open(path).unwrap();
-        let mut data: Vec<u8> = Vec::new();
-        file.read_to_end(&mut data);
-        stream.write(data.as_slice()).unwrap();
+            // TODO Optimize this, hend filetipe headers and load file in chunks
+            let mut file = File::open(path).unwrap();
+            let mut data: Vec<u8> = Vec::new();
+            file.read_to_end(&mut data).unwrap();
+            stream.write(data.as_slice()).unwrap();
 
-    } else {
-        if request.path.ends_with("/") || request.path.ends_with("\\"){
-            if APP_CONFIG.server.list_directories {
-                stream.write(HTTP_OK).unwrap();
-                stream.write(HTML_HEADER).unwrap();
-                stream.write(read_dir(request).as_bytes()).unwrap();
-                stream.write(HTML_CLOSE).unwrap();
-            } else {
-                stream.write(HTTP_NOT_FOUND).unwrap();
-                stream.write(HTML_HEADER).unwrap();
-                stream.write(HTML_ERROR_PAGE).unwrap();
-                stream.write(HTML_CLOSE).unwrap();
+        } else {
+            if request.path.ends_with("/") || request.path.ends_with("\\"){
+                if APP_CONFIG.server.list_directories {
+                    stream.write(HTTP_OK).unwrap();
+                    stream.write(HTML_HEADER).unwrap();
+                    stream.write(read_dir(&request).as_bytes()).unwrap();
+                    stream.write(HTML_CLOSE).unwrap();
+                } else {
+                    stream.write(HTTP_NOT_FOUND).unwrap();
+                    stream.write(HTML_HEADER).unwrap();
+                    stream.write(HTML_ERROR_PAGE).unwrap();
+                    stream.write(HTML_CLOSE).unwrap();
+                }
             }
         }
+    } else {
+        stream.write(HTTP_NOT_FOUND).unwrap();
+        stream.write(HTML_HEADER).unwrap();
+        stream.write(HTML_ERROR_PAGE).unwrap();
+        stream.write(HTML_CLOSE).unwrap();
     }
 }
 
@@ -171,7 +173,7 @@ fn test2(mut stream: TcpStream, buffer: Request) {
 
 
 // ToDo Test Bytes instead of strings for better performance
-fn read_dir(request:Request) -> String {
+fn read_dir(request:&Request) -> String {
     let mut result = String::new();
     result = add_string(& result,format!("<h1>Listing:{}</h1><br />", &request.path));
 
@@ -179,7 +181,11 @@ fn read_dir(request:Request) -> String {
     if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
         result = add_string(& result,"<a href='..'>Upper Directory</a><br />".to_string());
     }
-    println!("{}",&request_path);
+
+    if APP_CONFIG.debug.active {
+        println!("{}",&request_path);
+    }
+
     let paths = fs::read_dir(&request_path).unwrap();
 
     let mut directories:Vec<String> = Vec::new();
