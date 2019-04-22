@@ -4,12 +4,8 @@ extern crate notify;
 extern crate serde;
 extern crate serde_derive;
 
-use std::thread;
 use config::*;
 use std::sync::RwLock;
-use std::time::Duration;
-use notify::{RecommendedWatcher, DebouncedEvent, Watcher, RecursiveMode};
-use std::sync::mpsc::channel;
 
 lazy_static! {
     static ref SETTINGS: RwLock<Config> = RwLock::new({
