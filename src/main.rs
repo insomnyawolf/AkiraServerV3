@@ -18,6 +18,10 @@ use threadpool::ThreadPool;
 // For Config
 mod settings;
 
+// Request Module
+mod request;
+use request::*;
+
 lazy_static! {
     #[derive(Debug)]
     static ref APP_CONFIG: settings::Settings = settings::Settings::new_unwrap();
@@ -65,38 +69,43 @@ fn server(){
     }
 }
 
+
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 512];
     //Parse request data
     stream.read(&mut buffer).unwrap();
     //Prints request info in the
-    let get = b"GET / HTTP/1.1\r\n";
 
-    if buffer.starts_with(get) {
-        test1(stream, buffer);
+    let mut request = Request::default();
+    request.parse(&buffer);
+
+    print!("{:?}\n", &request);
+
+    //"GET / HTTP/1.1\r\n"
+    if &request.method == ("GET") {
+        test1(stream, request);
     } else {
-        test2(stream, buffer);
+        println!("Unsupported Method: {}", request.method);
+        //test2(stream, request);
     }
 }
 
-fn handle_get(mut stream: TcpStream, buffer: [u8; 512]){
+fn handle_get(mut stream: TcpStream, request: Request){
 
 }
 
-fn test1(mut stream: TcpStream, buffer: [u8; 512]) {
-    let request = String::from_utf8_lossy(&buffer[..]);
-    let header = HTTP_OK;
+fn test1(mut stream: TcpStream, request: Request) {
     //Send response
     let mut response = Vec::new();
-    response.extend_from_slice(header);
+    response.extend_from_slice(HTTP_OK);
     response.extend_from_slice(read_dir().as_bytes());
-    response.extend_from_slice(request.as_bytes());
+    //response.extend_from_slice(request.as_bytes());
     stream.write(response.as_slice()).unwrap();
     stream.flush().unwrap();
 }
 
-fn test2(mut stream: TcpStream, buffer: [u8; 512]) {
-    let request = String::from_utf8_lossy(&buffer[..]);
+/*
+fn test2(mut stream: TcpStream, buffer: Request) {
     println!("Request: {}", request);
     let sleep = b"GET /sleep HTTP/1.1\r\n";
     let (header, data) = if buffer.starts_with(sleep) {
@@ -113,7 +122,7 @@ fn test2(mut stream: TcpStream, buffer: [u8; 512]) {
     stream.write(response.as_slice()).unwrap();
     stream.flush().unwrap();
 }
-
+*/
 /*
 //Opens file
     let mut file = File::open(filename).unwrap();
