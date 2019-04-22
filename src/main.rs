@@ -40,7 +40,6 @@ fn main() {
     //print!("Current server location {} \n", path.as_path().display());
 
     APP_CONFIG.show();
-    APP_CONFIG.watch();
 
     server();
 }

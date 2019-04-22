@@ -61,6 +61,8 @@ impl Settings {
         println!(" * Settings :: \n\x1b[31m{:?}\x1b[0m", self);
     }
 
+    // ToDo funciona con la implementacion actual, WIP
+    /*
     pub fn watch(&self) {
         // Watch for settings change
         thread::spawn(|| {
@@ -95,5 +97,5 @@ impl Settings {
                 }
             }
         });
-    }
+    }*/
 }
