@@ -20,3 +20,25 @@ Reimplementacion de servidor web por 3º vez , esta vez en rust!
 ### Hecho
 * Threadpool para requests
 
+### Bug
+
+* /Sleep
+
+
+## Docs
+
+### Tecnologias
+
+#### Rust
+
+[Rust](https://www.rust-lang.org/)  
+[Awesome Rust](https://github.com/rust-unofficial/awesome-rust)
+
+#### Protocolo http
+
+[Mozilla MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview)
+
+
+### Librerias Usadas
+
+#### 
