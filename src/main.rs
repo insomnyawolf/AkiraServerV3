@@ -188,10 +188,6 @@ fn read_dir(request: &Request) -> String {
         );
     }
 
-    if APP_CONFIG.debug.active {
-        println!("{}", &request_path);
-    }
-
     let paths = fs::read_dir(&request_path).unwrap();
 
     let mut directories: Vec<String> = Vec::new();
