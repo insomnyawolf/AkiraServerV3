@@ -9,65 +9,84 @@ impl Request {
     pub fn parse(buffer: &[u8]) -> Request {
         let mut req = Request::default();
 
-        let raw = String::from_utf8_lossy(&buffer).to_string().replace("\u{0}", "");
+        let raw = String::from_utf8_lossy(&buffer)
+            .to_string()
+            .replace("\u{0}", "");
 
-        let request_arr:Vec<_> = raw.splitn(3, ' ').collect();
+        let request_arr: Vec<_> = raw.splitn(3, ' ').collect();
 
         req.method = request_arr[0].to_string();
-        req.path = percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8().unwrap().to_string();
+        req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
+            .decode_utf8()
+            .unwrap()
+            .to_string();
         let mut client = Client::default();
         client.parse(request_arr[2]);
         req.client = client;
         req
     }
 
-    pub fn get_local_path(&self, root_folder:&String) -> String {
+    pub fn get_local_path(&self, root_folder: &String) -> String {
         root_folder.to_string() + &self.path
     }
-
 }
 
 #[derive(Debug, Default)]
 pub struct Client {
-    pub client: String,
-    //Oversimplified For Now
-    /*pub version: String,
-    pub browser: String,
+    pub version: String,
+    pub host: String,
     pub connection: String,
     pub cache_control: String,
     pub upgrade_insecure_requests: String,
     pub user_agent: String,
-    pub dnt: String,
     pub accept: String,
     pub accept_encoding: String,
-    pub accept_anguage: String,
+    pub accept_language: String,
     pub cookie: String,
-    pub other: String,*/
+    pub dnt: String,
+    pub pragma: String,
+    pub referer: String,
+    pub other: Vec<String>,
 }
 
 impl Client {
-    pub fn parse(& mut self, client_str: &str) {
-        self.client = client_str.to_string();
-        /*let client_arr:Vec<_> = client_str.splitn(12, "\r\n").collect();
-        self.version = client_arr[0].to_string();
-        self.browser = client_arr[1].to_string();
-        self.connection = client_arr[2].to_string();
-        self.cache_control = client_arr[3].to_string();
-        self.upgrade_insecure_requests = client_arr[4].to_string();
-        self.user_agent = client_arr[5].to_string();
-        self.dnt = client_arr[6].to_string();
-        self.accept = client_arr[7].to_string();
-        self.accept_encoding = client_arr[8].to_string();
-        self.accept_anguage = client_arr[9].to_string();
-        if client_arr.len() > 10 {
-            self.cookie = client_arr[10].to_string();
-        }else{
-            self.cookie = "".to_string();
+    pub fn parse(&mut self, client_str: &str) {
+        let client_arr: Vec<_> = client_str.rsplit("\r\n").collect();
+
+        for data in client_arr {
+            let current = data.to_string();
+
+            if current.starts_with("HTTP") {
+                self.version = current;
+            } else if current.starts_with("Host: ") {
+                self.host = current.trim_start_matches("Host: ").to_string();
+            } else if current.starts_with("Connection: ") {
+                self.connection = current.trim_start_matches("Connection: ").to_string();
+            } else if current.starts_with("Cache-Control: ") {
+                self.cache_control = current.trim_start_matches("Cache-Control: ").to_string();
+            } else if current.starts_with("Upgrade-Insecure-Requests: ") {
+                self.upgrade_insecure_requests = current
+                    .trim_start_matches("Upgrade-Insecure-Requests: ")
+                    .to_string();
+            } else if current.starts_with("User-Agent: ") {
+                self.user_agent = current.trim_start_matches("User-Agent: ").to_string();
+            } else if current.starts_with("Accept: ") {
+                self.accept = current.trim_start_matches("Accept: ").to_string();
+            } else if current.starts_with("Accept-Encoding: ") {
+                self.accept_encoding = current.trim_start_matches("Accept-Encoding: ").to_string();
+            } else if current.starts_with("Accept-Language: ") {
+                self.accept_language = current.trim_start_matches("Accept-Language: ").to_string();
+            } else if current.starts_with("Cookie: ") {
+                self.cookie = current.trim_start_matches("Cookie: ").to_string();
+            } else if current.starts_with("DNT: ") {
+                self.dnt = current.trim_start_matches("DNT: ").to_string();
+            } else if current.starts_with("Pragma: ") {
+                self.pragma = current.trim_start_matches("Pragma: ").to_string();
+            } else if current.starts_with("Referer: ") {
+                self.referer = current.trim_start_matches("Referer: ").to_string();
+            } else {
+                self.other.push(current);
+            }
         }
-        if client_arr.len() > 11 {
-            self.other = client_arr[11].to_string();
-        }else{
-            self.other = "".to_string();
-        }*/
     }
 }
