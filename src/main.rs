@@ -1,29 +1,29 @@
-#[macro_use]
-extern crate serde_derive;
+extern crate config;
 #[macro_use]
 extern crate lazy_static;
+// Url
+extern crate percent_encoding;
+#[macro_use]
+extern crate serde_derive;
 
-extern crate config;
-
-use num_cpus;
 //use std::thread;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
+
+use num_cpus;
 // use std::time::Duration;
 use threadpool::ThreadPool;
+
+use request::*;
 
 // For Config
 mod settings;
 
 // Request Module
 mod request;
-use request::*;
-
-// Url
-extern crate percent_encoding;
 
 lazy_static! {
     #[derive(Debug)]
@@ -32,22 +32,21 @@ lazy_static! {
 }
 
 // Resources
-static HTML_HEADER:&[u8] = include_bytes!("../resources/html_header.html");
-static HTML_CLOSE:&[u8] = include_bytes!("../resources/html_close.html");
-static HTML_ERROR_PAGE:&[u8] = include_bytes!("../resources/404.html");
-static HTML_HELLO_PAGE:&[u8] = include_bytes!("../resources/hello.html");
+static HTML_HEADER: &[u8] = include_bytes!("../resources/html_header.html");
+static HTML_CLOSE: &[u8] = include_bytes!("../resources/html_close.html");
+static HTML_ERROR_PAGE: &[u8] = include_bytes!("../resources/404.html");
+static HTML_HELLO_PAGE: &[u8] = include_bytes!("../resources/hello.html");
 
 // Http Headers
-static HTTP_NOT_FOUND:&[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
-static HTTP_OK:&[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
+static HTTP_NOT_FOUND: &[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
+static HTTP_OK: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 
 fn main() {
     APP_CONFIG.show();
     server();
 }
 
-
-fn server(){
+fn server() {
     // Obtiene numero procesadores logicos
     let core_count = num_cpus::get();
     // Calcula trabajos por procasador logico
@@ -57,7 +56,12 @@ fn server(){
     // Echo
     print!("Starting server with {} thread max\n", core_count);
     // Bind de la direccion tcp
-    let listener = TcpListener::bind(format!("{host}:{port}", host = APP_CONFIG.server.host, port = APP_CONFIG.server.port)).unwrap();
+    let listener = TcpListener::bind(format!(
+        "{host}:{port}",
+        host = APP_CONFIG.server.host,
+        port = APP_CONFIG.server.port
+    ))
+    .unwrap();
     // Bucle para cada peticion tcp
     for stream in listener.incoming() {
         // Canal de datos tcp
@@ -70,13 +74,12 @@ fn server(){
     }
 }
 
-
 fn handle_connection(mut stream: TcpStream) {
     // If request buffer is too small it may fail
     // TODO Check if variable size is possible
     // 8192 Should never give problem but maybe smaller can get it more optimized
     // 2048 Seems reasonable to me if you need to save those extra bytes
-    let mut buffer = [0;8192];
+    let mut buffer = [0; 8192];
     //Parse request data
     stream.read(&mut buffer).unwrap();
     //Prints request info in the
@@ -96,10 +99,10 @@ fn handle_connection(mut stream: TcpStream) {
     }
 }
 
-fn handle_get(mut stream: TcpStream, request:&Request){
+fn handle_get(mut stream: TcpStream, request: &Request) {
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if std::path::Path::new(&path).exists() {
-        if fs::metadata(&path).unwrap().is_file(){
+        if fs::metadata(&path).unwrap().is_file() {
             stream.write(HTTP_OK).unwrap();
 
             // TODO Optimize this, hend filetipe headers and load file in chunks
@@ -107,9 +110,8 @@ fn handle_get(mut stream: TcpStream, request:&Request){
             let mut data: Vec<u8> = Vec::new();
             file.read_to_end(&mut data).unwrap();
             stream.write(data.as_slice()).unwrap();
-
         } else {
-            if request.path.ends_with("/") || request.path.ends_with("\\"){
+            if request.path.ends_with("/") || request.path.ends_with("\\") {
                 if APP_CONFIG.server.list_directories {
                     stream.write(HTTP_OK).unwrap();
                     stream.write(HTML_HEADER).unwrap();
@@ -174,43 +176,52 @@ fn test2(mut stream: TcpStream, buffer: Request) {
     //Send response
 */
 
-
 // ToDo Test Bytes instead of strings for better performance
-fn read_dir(request:&Request) -> String {
+fn read_dir(request: &Request) -> String {
     let mut result = String::new();
-    result = add_string(& result,format!("<h1>Listing:{}</h1><br />", &request.path));
+    result = add_string(&result, format!("<h1>Listing:{}</h1><br />", &request.path));
 
     let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
-        result = add_string(& result,"<a href=\"..\">Upper Directory</a><br />".to_string());
+        result = add_string(
+            &result,
+            "<a href=\"..\">Upper Directory</a><br />".to_string(),
+        );
     }
 
     if APP_CONFIG.debug.active {
-        println!("{}",&request_path);
+        println!("{}", &request_path);
     }
 
     let paths = fs::read_dir(&request_path).unwrap();
 
-    let mut directories:Vec<String> = Vec::new();
-    let mut files:Vec<String> = Vec::new();
+    let mut directories: Vec<String> = Vec::new();
+    let mut files: Vec<String> = Vec::new();
 
     for item_info in paths {
         let path = item_info.unwrap().path().display().to_string();
         let md = fs::metadata(&path).unwrap();
         if md.is_dir() {
             directories.push(path);
-        }else if md.is_file() {
+        } else if md.is_file() {
             files.push(path);
         }
     }
 
     if directories.len() > 0 {
-        result = add_string(& result,"<h2>Directories</h2><br />".to_string());
+        result = add_string(&result, "<h2>Directories</h2><br />".to_string());
     }
 
     for path in directories {
         let link = get_web_path(path, &request_path);
-        result = add_string(& result,format!("<a href=\"{1}/\">{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
+        result = add_string(
+            &result,
+            format!(
+                "<a href=\"{1}/\">{0}</a><br />",
+                link,
+                percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)
+            ),
+        );
     }
 
     if files.len() > 0 {
@@ -219,16 +230,22 @@ fn read_dir(request:&Request) -> String {
 
     for path in files {
         let link = get_web_path(path, &request_path);
-        result = add_string(& result,format!("<a href=\"{1}\">{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
+        result = add_string(
+            &result,
+            format!(
+                "<a href=\"{1}\">{0}</a><br />",
+                link,
+                percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)
+            ),
+        );
     }
     result
 }
 
-fn get_web_path(full_path:String, path:&String) -> String {
+fn get_web_path(full_path: String, path: &String) -> String {
     full_path.trim_start_matches(&*path).to_string()
 }
 
-fn add_string(a:&String, b:String) -> String {
+fn add_string(a: &String, b: String) -> String {
     a.to_string() + &b
 }
-
