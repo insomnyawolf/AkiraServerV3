@@ -4,8 +4,9 @@ extern crate notify;
 extern crate serde;
 extern crate serde_derive;
 
-use config::*;
 use std::sync::RwLock;
+
+use config::*;
 
 lazy_static! {
     static ref SETTINGS: RwLock<Config> = RwLock::new({
