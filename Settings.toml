@@ -1,7 +1,8 @@
 [Server]
-host = "127.0.0.1"
+host = "0.0.0.0" #0.0.0.0 will listen on all interfaces
 port = "8080"
-root_folder = "M:/pic/" #if windows and you want to use \, remember to escape the path and use \\
+ttl = 128
+root_folder = "./" #if windows and you want to use \, remember to escape the path and use \\
 list_directories = true
 workers_per_thread = 1
 
