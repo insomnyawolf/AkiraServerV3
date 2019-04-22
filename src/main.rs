@@ -112,17 +112,14 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
             stream.write(data.as_slice()).unwrap();
         } else {
             if request.path.ends_with("/") || request.path.ends_with("\\") {
+                stream.write(HTTP_OK).unwrap();
+                stream.write(HTML_HEADER).unwrap();
                 if APP_CONFIG.server.list_directories {
-                    stream.write(HTTP_OK).unwrap();
-                    stream.write(HTML_HEADER).unwrap();
                     stream.write(read_dir(&request).as_bytes()).unwrap();
-                    stream.write(HTML_CLOSE).unwrap();
                 } else {
-                    stream.write(HTTP_NOT_FOUND).unwrap();
-                    stream.write(HTML_HEADER).unwrap();
                     stream.write(HTML_ERROR_PAGE).unwrap();
-                    stream.write(HTML_CLOSE).unwrap();
                 }
+                stream.write(HTML_CLOSE).unwrap();
             }
         }
     } else {
