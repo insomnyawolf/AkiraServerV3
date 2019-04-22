@@ -11,9 +11,17 @@ readme = "..."
 maintenance = { status = "experimental" }
 
 [dependencies]
-threadpool = "1.7.1"
-num_cpus = "1.10.0"
-bytes = "0.4.12"
+threadpool = "*"
+num_cpus = "*"
+bytes = "*"
+
+#Config Files
+config = "*"
+lazy_static = "*"
+notify = "*"
+serde_derive = "*"
+serde = "*"
+
 [profile.dev]
 opt-level = 0      # controls the `--opt-level` the compiler builds with.
                    # 0-1 is good for debugging. 2 is well-optimized. Max is 3.
