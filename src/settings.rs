@@ -11,7 +11,9 @@ use config::*;
 lazy_static! {
     static ref SETTINGS: RwLock<Config> = RwLock::new({
         let mut settings = Config::default();
-        settings.merge(config::File::with_name("Settings.toml")).unwrap();
+        settings
+            .merge(config::File::with_name("Settings.toml"))
+            .unwrap();
 
         settings
     });
@@ -56,7 +58,7 @@ impl Settings {
     }
 
     pub fn show(&self) {
-        println!(" * Settings :: \n\x1b[31m{:?}\x1b[0m", self);
+        println!("\n\x1b[31m{:?}\x1b[0m", self);
     }
 
     // ToDo funciona con la implementacion actual, WIP
