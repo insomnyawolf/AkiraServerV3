@@ -13,12 +13,16 @@ impl Request {
         let request_arr:Vec<_> = request_str.splitn(3, ' ').collect();
 
         self.method = request_arr[0].to_string();
-        self.path = request_arr[1].to_string();
-
+        self.path = percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8().unwrap().to_string();
         let mut client = Client::default();
         client.parse(request_arr[2]);
         self.client = client;
     }
+
+    pub fn get_local_path(&self, root_folder:&String) -> String {
+        root_folder.to_string() + &self.path
+    }
+
 }
 
 #[derive(Debug, Default)]
@@ -50,7 +54,11 @@ impl Client {
         self.accept = client_arr[7].to_string();
         self.accept_encoding = client_arr[8].to_string();
         self.accept_anguage = client_arr[9].to_string();
-        self.cookie = client_arr[10].to_string();
+        if client_arr.len() > 10 {
+            self.cookie = client_arr[10].to_string();
+        }else{
+            self.cookie = "".to_string();
+        }
         if client_arr.len() > 11 {
             self.other = client_arr[11].to_string();
         }else{
