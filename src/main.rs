@@ -1,27 +1,58 @@
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate lazy_static;
+
+extern crate config;
+
 use num_cpus;
-use std::env;
+use std::thread;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
-use std::thread;
 use std::time::Duration;
 use threadpool::ThreadPool;
+
+// For Config
+mod settings;
+
+lazy_static! {
+    #[derive(Debug)]
+    static ref APP_CONFIG: settings::Settings = settings::Settings::new_unwrap();
+}
+
+// Resources
+static ERROR_PAGE:&[u8] = include_bytes!("../404.html");
+static HELLO_PAGE:&[u8] = include_bytes!("../hello.html");
+
+// Http Headers
+static HTTP_NOT_FOUND:&[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
+static HTTP_OK:&[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 
 fn main() {
     //let path = env::current_dir().unwrap();
     //print!("Current server location {} \n", path.as_path().display());
+
+    APP_CONFIG.show();
+    APP_CONFIG.watch();
+
+    server();
+}
+
+
+fn server(){
     // Obtiene numero procesadores logicos
     let core_count = num_cpus::get();
-    let workers_per_core= 4;
     // Calcula trabajos por procasador logico
-    let n_workers = core_count * workers_per_core;
+    let n_workers = core_count * APP_CONFIG.server.workers_per_thread;
     // Inicia piscina de trabajos limitada
     let pool = ThreadPool::new(n_workers);
+    // Echo
     print!("Starting server with {} thread max\n", core_count);
     // Bind de la direccion tcp
-    let listener = TcpListener::bind("127.0.0.1:80").unwrap();
+    let listener = TcpListener::bind(format!("{host}:{port}", host = APP_CONFIG.server.host, port = APP_CONFIG.server.port)).unwrap();
     // Bucle para cada peticion tcp
     for stream in listener.incoming() {
         // Canal de datos tcp
@@ -48,13 +79,19 @@ fn handle_connection(mut stream: TcpStream) {
     }
 }
 
+fn handle_get(mut stream: TcpStream, buffer: [u8; 512]){
+
+}
+
 fn test1(mut stream: TcpStream, buffer: [u8; 512]) {
     let request = String::from_utf8_lossy(&buffer[..]);
-    let status_line = "HTTP/1.1 200 OK\r\n\r\n";
-    let response = format!("{}{}{}", status_line, read_dir(), request);
-    println!("{}", response);
+    let header = HTTP_OK;
     //Send response
-    stream.write(response.as_bytes()).unwrap();
+    let mut response = Vec::new();
+    response.extend_from_slice(header);
+    response.extend_from_slice(read_dir().as_bytes());
+    response.extend_from_slice(request.as_bytes());
+    stream.write(response.as_slice()).unwrap();
     stream.flush().unwrap();
 }
 
@@ -62,13 +99,23 @@ fn test2(mut stream: TcpStream, buffer: [u8; 512]) {
     let request = String::from_utf8_lossy(&buffer[..]);
     println!("Request: {}", request);
     let sleep = b"GET /sleep HTTP/1.1\r\n";
-    let (status_line, filename) = if buffer.starts_with(sleep) {
+    let (header, data) = if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(10));
-        ("HTTP/1.1 404 NOT FOUND\r\n\r\n", "hello.html")
+        (HTTP_NOT_FOUND, HELLO_PAGE)
     } else {
-        ("HTTP/1.1 404 NOT FOUND\r\n\r\n", "404.html")
+        (HTTP_NOT_FOUND, ERROR_PAGE)
     };
-    //Opens file
+
+    let mut response = Vec::new();
+    response.extend_from_slice(header);
+    response.extend_from_slice(data);
+
+    stream.write(response.as_slice()).unwrap();
+    stream.flush().unwrap();
+}
+
+/*
+//Opens file
     let mut file = File::open(filename).unwrap();
     //Create empty string
     let mut contents = String::new();
@@ -78,12 +125,10 @@ fn test2(mut stream: TcpStream, buffer: [u8; 512]) {
     let response = format!("{}{}{}", status_line, contents, request);
     println!("{}", response);
     //Send response
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
-}
+*/
 
 fn read_dir() -> String {
-    let paths = fs::read_dir("./").unwrap();
+    let paths = fs::read_dir(format!("{}", APP_CONFIG.server.root_folder)).unwrap();
     let mut result = String::new();
     for path in paths {
         result = format!(
@@ -94,3 +139,4 @@ fn read_dir() -> String {
     }
     result
 }
+
