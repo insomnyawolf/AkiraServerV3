@@ -10,8 +10,7 @@ extern crate serde_derive;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::net::TcpListener;
-use std::net::TcpStream;
+use std::net::{TcpListener, TcpStream};
 
 use num_cpus;
 // use std::time::Duration;
@@ -53,8 +52,6 @@ fn server() {
     let n_workers = core_count * APP_CONFIG.server.workers_per_thread;
     // Inicia piscina de trabajos limitada
     let pool = ThreadPool::new(n_workers);
-    // Echo
-    print!("Starting server with {} thread max\n", core_count);
     // Bind de la direccion tcp
     let listener = TcpListener::bind(format!(
         "{host}:{port}",
@@ -62,6 +59,11 @@ fn server() {
         port = APP_CONFIG.server.port
     ))
     .unwrap();
+
+    listener
+        .set_ttl(APP_CONFIG.server.ttl)
+        .expect("could not set TTL");
+
     // Bucle para cada peticion tcp
     for stream in listener.incoming() {
         // Canal de datos tcp
