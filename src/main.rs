@@ -87,7 +87,7 @@ fn handle_connection(mut stream: TcpStream) {
     let request = Request::parse(&buffer);
 
     if APP_CONFIG.debug.active {
-        println!("{:?}", &request);
+        println!("Debug:\n  {:?}", &request);
     }
 
     //"GET / HTTP/1.1\r\n"
