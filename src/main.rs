@@ -102,9 +102,13 @@ fn handle_get(mut stream: TcpStream, request: Request){
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if fs::metadata(&path).unwrap().is_file(){
         stream.write(HTTP_OK).unwrap();
+
+        // TODO Optimize this, hend filetipe headers and load file in chunks
         let mut file = File::open(path).unwrap();
-        let bytes = file.;
-        stream.write().unwrap();
+        let mut data: Vec<u8> = Vec::new();
+        file.read_to_end(&mut data);
+        stream.write(data.as_slice()).unwrap();
+
     } else {
         if request.path.ends_with("/") || request.path.ends_with("\\"){
             if APP_CONFIG.server.list_directories {

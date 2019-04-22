@@ -1,8 +1,9 @@
 [Server]
 host = "127.0.0.1"
 port = "8080"
-root_folder = "M:/" #if windows and you want to use \, remember to escape the path and use \\
+root_folder = "M:/pic/" #if windows and you want to use \, remember to escape the path and use \\
+list_directories = true
 workers_per_thread = 1
 
 [debug]
-active = false
+active = true
