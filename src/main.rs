@@ -73,7 +73,10 @@ fn server(){
 
 fn handle_connection(mut stream: TcpStream) {
     // If request buffer is too small it may fail
-    let mut buffer = [0;1024];
+    // TODO Check if variable size is possible
+    // 8192 Should never give problem but maybe smaller can get it more optimized
+    // 2048 Seems reasonable to me if you need to save those extra bytes
+    let mut buffer = [0;8192];
     //Parse request data
     stream.read(&mut buffer).unwrap();
     //Prints request info in the
