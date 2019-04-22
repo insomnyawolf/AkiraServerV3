@@ -69,6 +69,7 @@ pub struct Request {
 }
 ```
 
+WIP ↓
 ```rust
 #[derive(Debug, Default)]
 pub struct Client {
