@@ -25,6 +25,7 @@ pub struct Server {
     pub host: String,
     pub port: String,
     pub root_folder: String,
+    pub list_directories: bool,
     pub workers_per_thread: usize,
 }
 
