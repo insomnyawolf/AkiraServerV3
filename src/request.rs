@@ -1,5 +1,6 @@
 #[derive(Debug, Default)]
 pub struct Request {
+    pub is_valid_request: bool,
     pub method: String,
     pub path: String,
     pub client: Client,
@@ -15,14 +16,17 @@ impl Request {
 
         let request_arr: Vec<_> = raw.splitn(3, ' ').collect();
 
-        req.method = request_arr[0].to_string();
-        req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
-            .decode_utf8()
-            .unwrap()
-            .to_string();
-        let mut client = Client::default();
-        client.parse(request_arr[2]);
-        req.client = client;
+        if request_arr.len() == 3 {
+            req.method = request_arr[0].to_string();
+            req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
+                .decode_utf8()
+                .unwrap()
+                .to_string();
+            let mut client = Client::default();
+            client.parse(request_arr[2]);
+            req.client = client;
+            req.is_valid_request = true;
+        }
         req
     }
 

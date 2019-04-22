@@ -89,15 +89,19 @@ fn handle_connection(mut stream: TcpStream) {
     let request = Request::parse(&buffer);
 
     if APP_CONFIG.debug.active {
-        println!("Debug:\n  {:?}", &request);
+        println!("Debug:\n  {:?}\n", &request);
     }
 
-    //"GET / HTTP/1.1\r\n"
-    if &request.method == ("GET") {
-        handle_get(stream, &request);
+    if request.is_valid_request {
+        //"GET / HTTP/1.1\r\n"
+        if &request.method == ("GET") {
+            handle_get(stream, &request);
+        } else {
+            println!("Unsupported Method: {}\n", request.method);
+            //test2(stream, request);
+        }
     } else {
-        println!("Unsupported Method: {}", request.method);
-        //test2(stream, request);
+        println!("Invalid Request\n");
     }
 }
 
@@ -178,6 +182,7 @@ fn test2(mut stream: TcpStream, buffer: Request) {
 // ToDo Test Bytes instead of strings for better performance
 fn read_dir(request: &Request) -> String {
     let mut result = String::new();
+
     result = add_string(&result, format!("<h1>Listing:{}</h1><br />", &request.path));
 
     let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
