@@ -179,7 +179,7 @@ fn read_dir(request:&Request) -> String {
 
     let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
-        result = add_string(& result,"<a href='..'>Upper Directory</a><br />".to_string());
+        result = add_string(& result,"<a href=\"..\">Upper Directory</a><br />".to_string());
     }
 
     if APP_CONFIG.debug.active {
@@ -207,7 +207,7 @@ fn read_dir(request:&Request) -> String {
 
     for path in directories {
         let link = get_web_path(path, &request_path);
-        result = add_string(& result,format!("<a href='{1}/'>{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
+        result = add_string(& result,format!("<a href=\"{1}/\">{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
     }
 
     if files.len() > 0 {
@@ -216,7 +216,7 @@ fn read_dir(request:&Request) -> String {
 
     for path in files {
         let link = get_web_path(path, &request_path);
-        result = add_string(& result,format!("<a href='{1}'>{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
+        result = add_string(& result,format!("<a href=\"{1}\">{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
     }
     result
 }
