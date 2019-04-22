@@ -229,14 +229,18 @@ fn read_dir(request: &Request) -> String {
         let link = get_web_path(path, &request_path);
         result = add_string(
             &result,
-            format!(
-                "<a href=\"{1}\">{0}</a><br />",
-                link,
-                percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)
-            ),
+            format!("<a href=\"{1}\">{0}</a><br />", link, percent_encode(&link)),
         );
     }
     result
+}
+
+fn percent_encode(link: &String) -> String {
+    percent_encoding::utf8_percent_encode(
+        &link.replace('%', "%25"),
+        percent_encoding::DEFAULT_ENCODE_SET,
+    )
+    .to_string()
 }
 
 fn get_web_path(full_path: String, path: &String) -> String {
