@@ -14,6 +14,7 @@ use std::net::TcpListener;
 use std::net::TcpStream;
 use std::time::Duration;
 use threadpool::ThreadPool;
+use std::collections::HashMap;
 
 // For Config
 mod settings;
@@ -22,14 +23,20 @@ mod settings;
 mod request;
 use request::*;
 
+// Url
+extern crate percent_encoding;
+
 lazy_static! {
     #[derive(Debug)]
     static ref APP_CONFIG: settings::Settings = settings::Settings::new_unwrap();
+    static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder , "/".to_string());
 }
 
 // Resources
-static ERROR_PAGE:&[u8] = include_bytes!("../404.html");
-static HELLO_PAGE:&[u8] = include_bytes!("../hello.html");
+static HTML_HEADER:&[u8] = include_bytes!("../resources/html_header.html");
+static HTML_CLOSE:&[u8] = include_bytes!("../resources/html_close.html");
+static HTML_ERROR_PAGE:&[u8] = include_bytes!("../resources/404.html");
+static HTML_HELLO_PAGE:&[u8] = include_bytes!("../resources/hello.html");
 
 // Http Headers
 static HTTP_NOT_FOUND:&[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
@@ -78,11 +85,13 @@ fn handle_connection(mut stream: TcpStream) {
     let mut request = Request::default();
     request.parse(&buffer);
 
-    print!("{:?}\n", &request);
+    if APP_CONFIG.debug.active {
+        print!("{:?}\n", &request);
+    }
 
     //"GET / HTTP/1.1\r\n"
     if &request.method == ("GET") {
-        test1(stream, request);
+        handle_get(stream, request);
     } else {
         println!("Unsupported Method: {}", request.method);
         //test2(stream, request);
@@ -90,9 +99,30 @@ fn handle_connection(mut stream: TcpStream) {
 }
 
 fn handle_get(mut stream: TcpStream, request: Request){
-
+    let path = request.get_local_path(&APP_CONFIG.server.root_folder);
+    if fs::metadata(&path).unwrap().is_file(){
+        stream.write(HTTP_OK).unwrap();
+        let mut file = File::open(path).unwrap();
+        let bytes = file.;
+        stream.write().unwrap();
+    } else {
+        if request.path.ends_with("/") || request.path.ends_with("\\"){
+            if APP_CONFIG.server.list_directories {
+                stream.write(HTTP_OK).unwrap();
+                stream.write(HTML_HEADER).unwrap();
+                stream.write(read_dir(request).as_bytes()).unwrap();
+                stream.write(HTML_CLOSE).unwrap();
+            } else {
+                stream.write(HTTP_NOT_FOUND).unwrap();
+                stream.write(HTML_HEADER).unwrap();
+                stream.write(HTML_ERROR_PAGE).unwrap();
+                stream.write(HTML_CLOSE).unwrap();
+            }
+        }
+    }
 }
 
+/*
 fn test1(mut stream: TcpStream, request: Request) {
     //Send response
     let mut response = Vec::new();
@@ -102,7 +132,7 @@ fn test1(mut stream: TcpStream, request: Request) {
     stream.write(response.as_slice()).unwrap();
     stream.flush().unwrap();
 }
-
+*/
 /*
 fn test2(mut stream: TcpStream, buffer: Request) {
     println!("Request: {}", request);
@@ -135,16 +165,57 @@ fn test2(mut stream: TcpStream, buffer: Request) {
     //Send response
 */
 
-fn read_dir() -> String {
-    let paths = fs::read_dir(format!("{}", APP_CONFIG.server.root_folder)).unwrap();
+
+// ToDo Test Bytes instead of strings for better performance
+fn read_dir(request:Request) -> String {
     let mut result = String::new();
-    for path in paths {
-        result = format!(
-            "{0} <a href='{1}'>{1}</a><br />",
-            result,
-            path.unwrap().path().display()
-        )
+    result = add_string(& result,format!("<h1>Listing:{}</h1><br />", &request.path));
+
+    let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
+    if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
+        result = add_string(& result,"<a href='..'>Upper Directory</a><br />".to_string());
+    }
+    println!("{}",&request_path);
+    let paths = fs::read_dir(&request_path).unwrap();
+
+    let mut directories:Vec<String> = Vec::new();
+    let mut files:Vec<String> = Vec::new();
+
+    for item_info in paths {
+        let path = item_info.unwrap().path().display().to_string();
+        let md = fs::metadata(&path).unwrap();
+        if md.is_dir() {
+            directories.push(path);
+        }else if md.is_file() {
+            files.push(path);
+        }
+    }
+
+    if directories.len() > 0 {
+        result = add_string(& result,"<h2>Directories</h2><br />".to_string());
+    }
+
+    for path in directories {
+        let link = get_web_path(path, &request_path);
+        result = add_string(& result,format!("<a href='{1}/'>{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
+    }
+
+    if files.len() > 0 {
+        result = add_string(&result, "<h2>Files</h2><br />".to_string());
+    }
+
+    for path in files {
+        let link = get_web_path(path, &request_path);
+        result = add_string(& result,format!("<a href='{1}'>{0}</a><br />", link, percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)));
     }
     result
+}
+
+fn get_web_path(full_path:String, path:&String) -> String {
+    full_path.trim_start_matches(&*path).to_string()
+}
+
+fn add_string(a:&String, b:String) -> String {
+    a.to_string() + &b
 }
 
