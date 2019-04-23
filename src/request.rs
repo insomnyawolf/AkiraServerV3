@@ -50,6 +50,8 @@ pub struct Client {
     pub dnt: String,
     pub pragma: String,
     pub referer: String,
+    pub via: String,
+    pub origin: String,
     pub other: Vec<String>,
 }
 
@@ -88,6 +90,10 @@ impl Client {
                 self.pragma = current.trim_start_matches("Pragma: ").to_string();
             } else if current.starts_with("Referer: ") {
                 self.referer = current.trim_start_matches("Referer: ").to_string();
+            } else if current.starts_with("Via: ") {
+                self.via = current.trim_start_matches("Via: ").to_string();
+            } else if current.starts_with("Origin: ") {
+                self.origin = current.trim_start_matches("Origin: ").to_string();
             } else {
                 self.other.push(current);
             }
