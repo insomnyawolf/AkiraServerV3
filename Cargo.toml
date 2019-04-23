@@ -6,7 +6,7 @@ edition = "2018"
 description = "Webserver"
 documentation = "..."
 homepage = "..."
-repository = "..."
+repository = "https://github.com/insomnyawolf/AkiraServerV3"
 readme = "..."
 maintenance = { status = "experimental" }
 
@@ -56,7 +56,7 @@ debug = false
 rpath = false
 lto = true
 debug-assertions = false
-codegen-units = 16
+codegen-units = 1
 panic = 'unwind'
 incremental = false
 overflow-checks = false
