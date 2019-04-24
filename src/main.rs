@@ -16,13 +16,15 @@ use num_cpus;
 // use std::time::Duration;
 use threadpool::ThreadPool;
 
-use request::*;
-
 // For Config
 mod settings;
 
 // Request Module
 mod request;
+mod response;
+
+use request::*;
+use response::*;
 
 lazy_static! {
     #[derive(Debug)]
@@ -35,10 +37,6 @@ static HTML_HEADER: &[u8] = include_bytes!("../resources/html_header.html");
 static HTML_CLOSE: &[u8] = include_bytes!("../resources/html_close.html");
 static HTML_ERROR_PAGE: &[u8] = include_bytes!("../resources/404.html");
 static HTML_HELLO_PAGE: &[u8] = include_bytes!("../resources/hello.html");
-
-// Http Headers
-static HTTP_NOT_FOUND: &[u8] = b"HTTP/1.1 404 NOT FOUND\r\n\r\n";
-static HTTP_OK: &[u8] = b"HTTP/1.1 200 OK\r\n\r\n";
 
 fn main() {
     APP_CONFIG.show();
@@ -94,11 +92,17 @@ fn handle_connection(mut stream: TcpStream) {
 
     if request.is_valid_request {
         //"GET / HTTP/1.1\r\n"
-        if &request.method == ("GET") {
-            handle_get(stream, &request);
-        } else {
-            println!("Unsupported Method: {}\n", request.method);
-            //test2(stream, request);
+        let method = Method::from_str(&request.method).unwrap();
+
+        // Switch Equivalent
+        match method {
+            Method::GET => {
+                handle_get(stream, &request);
+            }
+            _ => {
+                println!("Unsupported Method: {}\n", method.as_str());
+                //test2(stream, request);
+            }
         }
     } else {
         println!("Invalid Request\n");
@@ -109,7 +113,7 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if std::path::Path::new(&path).exists() {
         if fs::metadata(&path).unwrap().is_file() {
-            stream.write(HTTP_OK).unwrap();
+            stream.write(HttpStatus::OK.as_bytes()).unwrap();
 
             // TODO Optimize this, hend filetipe headers and load file in chunks
             let mut file = File::open(path).unwrap();
@@ -118,18 +122,21 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
             stream.write(data.as_slice()).unwrap();
         } else {
             if request.path.ends_with("/") || request.path.ends_with("\\") {
-                stream.write(HTTP_OK).unwrap();
-                stream.write(HTML_HEADER).unwrap();
                 if APP_CONFIG.server.list_directories {
+                    stream.write(HttpStatus::OK.as_bytes()).unwrap();
+                    stream.write(HTML_HEADER).unwrap();
                     stream.write(read_dir(&request).as_bytes()).unwrap();
+                    stream.write(HTML_CLOSE).unwrap();
                 } else {
+                    stream.write(HttpStatus::Forbidden.as_bytes()).unwrap();
+                    stream.write(HTML_HEADER).unwrap();
                     stream.write(HTML_ERROR_PAGE).unwrap();
+                    stream.write(HTML_CLOSE).unwrap();
                 }
-                stream.write(HTML_CLOSE).unwrap();
             }
         }
     } else {
-        stream.write(HTTP_NOT_FOUND).unwrap();
+        stream.write(HttpStatus::NotFound.as_bytes()).unwrap();
         stream.write(HTML_HEADER).unwrap();
         stream.write(HTML_ERROR_PAGE).unwrap();
         stream.write(HTML_CLOSE).unwrap();
