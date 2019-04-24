@@ -35,6 +35,49 @@ impl Request {
     }
 }
 
+// https://tools.ietf.org/html/rfc2616#section-5.1.1
+#[derive(Debug, PartialEq)]
+pub enum Method {
+    CONNECT,
+    DELETE,
+    GET,
+    HEAD,
+    OPTIONS,
+    POST,
+    PUT,
+    TRACE,
+}
+
+impl Method {
+    pub fn from_str(s: &String) -> Option<Method> {
+        let string: &str = &s[..];
+        match string {
+            "CONNECT" => Some(Method::CONNECT),
+            "DELETE" => Some(Method::DELETE),
+            "GET" => Some(Method::GET),
+            "HEAD" => Some(Method::HEAD),
+            "OPTIONS" => Some(Method::OPTIONS),
+            "POST" => Some(Method::POST),
+            "PUT" => Some(Method::PUT),
+            "TRACE" => Some(Method::TRACE),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match *self {
+            Method::CONNECT => "CONNECT",
+            Method::DELETE => "DELETE",
+            Method::GET => "GET",
+            Method::HEAD => "HEAD",
+            Method::OPTIONS => "OPTIONS",
+            Method::POST => "POST",
+            Method::PUT => "PUT",
+            Method::TRACE => "TRACE",
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Client {
     pub version: String,
@@ -52,6 +95,8 @@ pub struct Client {
     pub referer: String,
     pub via: String,
     pub origin: String,
+    pub content_length: u32,
+    pub content_type: String,
     pub other: Vec<String>,
 }
 
@@ -94,6 +139,14 @@ impl Client {
                 self.via = current.trim_start_matches("Via: ").to_string();
             } else if current.starts_with("Origin: ") {
                 self.origin = current.trim_start_matches("Origin: ").to_string();
+            } else if current.starts_with("Content-Type: ") {
+                self.content_type = current.trim_start_matches("Content-Type: ").to_string();
+            } else if current.starts_with("Content-Length: ") {
+                self.content_length = current
+                    .trim_start_matches("Content-Length: ")
+                    .to_string()
+                    .parse::<u32>()
+                    .unwrap();
             } else {
                 self.other.push(current);
             }
