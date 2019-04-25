@@ -91,16 +91,16 @@ fn handle_connection(mut stream: TcpStream) {
     }
 
     if request.is_valid_request {
-        //"GET / HTTP/1.1\r\n"
-        let method = Method::from_str(&request.method).unwrap();
-
         // Switch Equivalent
-        match method {
+        match request.get_method().unwrap() {
             Method::GET => {
                 handle_get(stream, &request);
             }
             _ => {
-                println!("Unsupported Method: {}\n", method.as_str());
+                println!(
+                    "Unsupported Method: {}\n",
+                    request.get_method().unwrap().as_str()
+                );
                 //test2(stream, request);
             }
         }
