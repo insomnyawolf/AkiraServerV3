@@ -2,6 +2,7 @@
 
 // https://tools.ietf.org/html/rfc2616
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+#[allow(dead_code)] // Remooves unused code warnings on compile time
 pub enum HttpStatus {
     // Informational 1xx
     Continue,           // 100
