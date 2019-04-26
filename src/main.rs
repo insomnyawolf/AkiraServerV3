@@ -155,49 +155,6 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
     }
 }
 
-/*
-fn test1(mut stream: TcpStream, request: Request) {
-    //Send response
-    let mut response = Vec::new();
-    response.extend_from_slice(HTTP_OK);
-    response.extend_from_slice(read_dir().as_bytes());
-    //response.extend_from_slice(request.as_bytes());
-    stream.write(response.as_slice()).unwrap();
-    stream.flush().unwrap();
-}
-*/
-/*
-fn test2(mut stream: TcpStream, buffer: Request) {
-    println!("Request: {}", request);
-    let sleep = b"GET /sleep HTTP/1.1\r\n";
-    let (header, data) = if buffer.starts_with(sleep) {
-        thread::sleep(Duration::from_secs(10));
-        (HTTP_NOT_FOUND, HELLO_PAGE)
-    } else {
-        (HTTP_NOT_FOUND, ERROR_PAGE)
-    };
-
-    let mut response = Vec::new();
-    response.extend_from_slice(header);
-    response.extend_from_slice(data);
-
-    stream.write(response.as_slice()).unwrap();
-    stream.flush().unwrap();
-}
-*/
-/*
-//Opens file
-    let mut file = File::open(filename).unwrap();
-    //Create empty string
-    let mut contents = String::new();
-    //Load file content onto variable
-    file.read_to_string(&mut contents).unwrap();
-    //Format response
-    let response = format!("{}{}{}", status_line, contents, request);
-    println!("{}", response);
-    //Send response
-*/
-
 // ToDo Test Bytes instead of strings for better performance
 fn read_dir(request: &Request) -> String {
     let mut result = String::new();
