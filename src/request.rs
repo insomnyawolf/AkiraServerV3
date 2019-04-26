@@ -1,5 +1,10 @@
+use std::io::Read;
+use std::net::TcpStream;
+use std::time::Duration;
+
 #[derive(Debug, Default)]
 pub struct Request {
+    raw: String,
     pub is_valid_request: bool,
     pub method: Method,
     pub path: String,
@@ -8,14 +13,23 @@ pub struct Request {
 
 impl Request {
     /** Parse request and headers from byte buffer **/
-    pub fn parse(buffer: &[u8]) -> Request {
+    pub fn parse(mut stream: TcpStream, timeout: Option<Duration>) -> Request {
+        // Create Structure with default values
         let mut req = Request::default();
 
-        let raw = String::from_utf8_lossy(&buffer)
-            .to_string()
-            .replace("\u{0}", "");
+        // Create Empty Byte Vector
+        let mut buffer_full: Vec<u8> = Vec::new();
 
-        let request_arr: Vec<_> = raw.splitn(3, ' ').collect();
+        stream.set_read_timeout(timeout).ok();
+        // Read bytes for the specified timeout
+        stream.read_to_end(&mut buffer_full).ok();
+
+        //Parse request data
+        req.raw = String::from_utf8_lossy(&buffer_full.as_slice())
+            .to_string()
+            .replace('\u{0}', "");
+
+        let request_arr: Vec<_> = req.raw.splitn(3, ' ').collect();
 
         if request_arr.len() == 3 {
             req.method = Method::from_str(&request_arr[0].to_string()).unwrap();
@@ -23,9 +37,8 @@ impl Request {
                 .decode_utf8()
                 .unwrap()
                 .to_string();
-            let mut headers = RequestHeaders::default();
-            headers.parse(request_arr[2]);
-            req.request_headers = headers;
+
+            req.request_headers = RequestHeaders::parse(request_arr[2]);
             req.is_valid_request = true;
         }
         req
@@ -34,6 +47,11 @@ impl Request {
     /** Obtains resource path relative to the specified location **/
     pub fn get_local_path(&self, root_folder: &String) -> String {
         root_folder.to_string() + &self.path
+    }
+
+    /** Returns Raw String **/
+    pub fn get_raw(&self) -> String {
+        self.raw.to_string()
     }
 }
 
@@ -183,101 +201,168 @@ pub struct RequestHeaders {
 }
 
 impl RequestHeaders {
-    pub fn parse(&mut self, client_str: &str) {
+    pub fn parse(client_str: &str) -> RequestHeaders {
+        let mut headers = RequestHeaders::default();
+
         let client_arr: Vec<&str> = client_str.rsplit("\r\n").collect();
 
         // ToDo Improove this loop
         for data in client_arr {
             let current = data.to_string();
 
-            if current.starts_with("A-IM: ") {
-                self.acceptable_instance_manipulations =
-                    current.trim_start_matches("A-IM: ").to_string();
+            if RequestHeaders::generate_field_string(
+                &mut headers.acceptable_instance_manipulations,
+                &current,
+                "A-IM: ",
+            ) {
             } else if current.starts_with("Accept: ") {
                 // Todo Check This
                 let values = current.trim_start_matches("Accept: ").replace(";", ",");
                 let arr: Vec<&str> = values.split(",").collect();
 
                 for data in arr {
-                    self.accept.push(data.to_string());
+                    headers.accept.push(data.to_string());
                 }
-            } else if current.starts_with("Accept-Charset: ") {
-                self.accept_charset = current.trim_start_matches("Accept-Charset: ").to_string();
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.accept_charset,
+                &current,
+                "Accept-Charset: ",
+            ) {
             } else if current.starts_with("Accept-Encoding: ") {
                 let arr: Vec<&str> = current
                     .trim_start_matches("Accept-Encoding: ")
                     .split(" ")
                     .collect();
                 for data in arr {
-                    self.accept_encoding.push(data.to_string());
+                    headers.accept_encoding.push(data.to_string());
                 }
-            } else if current.starts_with("Accept-Language: ") {
-                self.accept_language = current.trim_start_matches("Accept-Language: ").to_string();
-            } else if current.starts_with("Accept-Datetime: ") {
-                self.accept_datetime = current.trim_start_matches("Accept-Datetime: ").to_string();
-            } else if current.starts_with("Access-Control-Request-Method: ") {
-                self.access_control_request_method = current
-                    .trim_start_matches("Access-Control-Request-Method: ")
-                    .to_string();
-            } else if current.starts_with("Authorization: ") {
-                self.authorization = current.trim_start_matches("Authorization: ").to_string();
-            } else if current.starts_with("Cache-Control: ") {
-                self.cache_control = current.trim_start_matches("Cache-Control: ").to_string();
-            } else if current.starts_with("Connection: ") {
-                self.connection = current.trim_start_matches("Connection: ").to_string();
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.accept_language,
+                &current,
+                "Accept-Language: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.accept_datetime,
+                &current,
+                "Accept-Datetime: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.access_control_request_method,
+                &current,
+                "Access-Control-Request-Method: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.authorization,
+                &current,
+                "Authorization: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.cache_control,
+                &current,
+                "Cache-Control: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.connection,
+                &current,
+                "Connection: ",
+            ) {
             } else if current.starts_with("Content-Length: ") {
-                self.content_length = current
+                headers.content_length = current
                     .trim_start_matches("Content-Length: ")
                     .to_string()
                     .parse::<u64>()
                     .unwrap();
-            } else if current.starts_with("Content-MD5: ") {
-                self.content_md5 = current.trim_start_matches("Content-MD5: ").to_string();
-            } else if current.starts_with("Content-Type: ") {
-                self.content_type = current.trim_start_matches("Content-Type: ").to_string();
-            } else if current.starts_with("Cookie: ") {
-                self.cookie = current.trim_start_matches("Cookie: ").to_string();
-            } else if current.starts_with("Date: ") {
-                self.date = current.trim_start_matches("Date: ").to_string();
-            } else if current.starts_with("Expect: ") {
-                self.expect = current.trim_start_matches("Expect: ").to_string();
-            } else if current.starts_with("Forwarded: ") {
-                self.forwarded = current.trim_start_matches("Forwarded: ").to_string();
-            } else if current.starts_with("Host: ") {
-                self.host = current.trim_start_matches("Host: ").to_string();
-            } else if current.starts_with("Max-Forwards: ") {
-                self.max_forwards = current.trim_start_matches("Max-Forwards: ").to_string();
-            } else if current.starts_with("Origin: ") {
-                self.origin = current.trim_start_matches("Origin: ").to_string();
-            } else if current.starts_with("Pragma: ") {
-                self.pragma = current.trim_start_matches("Pragma: ").to_string();
-            } else if current.starts_with("Proxy-Authorization: ") {
-                self.proxy_authorization = current
-                    .trim_start_matches("Proxy-Authorization: ")
-                    .to_string();
-            } else if current.starts_with("Range: ") {
-                self.range = current.trim_start_matches("Range: ").to_string();
-            } else if current.starts_with("Referer: ") {
-                self.referer = current.trim_start_matches("Referer: ").to_string();
-            } else if current.starts_with("TE: ") {
-                self.transfer_encodings = current.trim_start_matches("TE: ").to_string();
-            } else if current.starts_with("User-Agent: ") {
-                self.user_agent = current.trim_start_matches("User-Agent: ").to_string();
-            } else if current.starts_with("Via: ") {
-                self.via = current.trim_start_matches("Via: ").to_string();
-            } else if current.starts_with("Warning: ") {
-                self.warning = current.trim_start_matches("Warning: ").to_string();
-            } else if current.starts_with("HTTP") {
-                self.version = current;
-            } else if current.starts_with("Upgrade-Insecure-Requests: ") {
-                self.upgrade_insecure_requests = current
-                    .trim_start_matches("Upgrade-Insecure-Requests: ")
-                    .to_string();
-            } else if current.starts_with("DNT: ") {
-                self.dnt = current.trim_start_matches("DNT: ").to_string();
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.content_md5,
+                &current,
+                "Content-MD5: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.content_type,
+                &current,
+                "Content-Type: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.cookie,
+                &current,
+                "Cookie: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.date, &current, "Date: ") {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.expect,
+                &current,
+                "Expect: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.forwarded,
+                &current,
+                "Forwarded: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.from, &current, "From: ") {
+            } else if RequestHeaders::generate_field_string(&mut headers.host, &current, "Host: ") {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.max_forwards,
+                &current,
+                "Max-Forwards: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.origin,
+                &current,
+                "Origin: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.pragma,
+                &current,
+                "Pragma: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.proxy_authorization,
+                &current,
+                "Proxy-Authorization: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.range, &current, "Range: ")
+            {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.referer,
+                &current,
+                "Referer: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.transfer_encodings,
+                &current,
+                "TE: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.user_agent,
+                &current,
+                "User-Agent: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.via, &current, "Via: ") {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.warning,
+                &current,
+                "Warning: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.version, &current, "HTTP ")
+            {
+            } else if RequestHeaders::generate_field_string(
+                &mut headers.upgrade_insecure_requests,
+                &current,
+                "Upgrade-Insecure-Requests: ",
+            ) {
+            } else if RequestHeaders::generate_field_string(&mut headers.dnt, &current, "DNT: ") {
             } else {
-                self.other.push(current);
+                headers.other.push(current);
             }
         }
+        headers
+    }
+
+    fn generate_field_string(field: &mut String, data: &String, pattern: &str) -> bool {
+        if data.starts_with(pattern) {
+            *field = data.trim_start_matches(pattern).to_string();
+            return true;
+        }
+        false
     }
 }
