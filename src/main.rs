@@ -36,7 +36,6 @@ lazy_static! {
 static HTML_HEADER: &[u8] = include_bytes!("../resources/html_header.html");
 static HTML_CLOSE: &[u8] = include_bytes!("../resources/html_close.html");
 static HTML_ERROR_PAGE: &[u8] = include_bytes!("../resources/404.html");
-static HTML_HELLO_PAGE: &[u8] = include_bytes!("../resources/hello.html");
 
 fn main() {
     APP_CONFIG.show();
