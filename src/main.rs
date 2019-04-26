@@ -91,15 +91,12 @@ fn handle_connection(mut stream: TcpStream) {
 
     if request.is_valid_request {
         // Switch Equivalent
-        match request.get_method().unwrap() {
+        match request.method {
             Method::GET => {
                 handle_get(stream, &request);
             }
             _ => {
-                println!(
-                    "Unsupported Method: {}\n",
-                    request.get_method().unwrap().as_str()
-                );
+                println!("Unsupported Method\n");
                 //test2(stream, request);
             }
         }
@@ -111,12 +108,18 @@ fn handle_connection(mut stream: TcpStream) {
 fn handle_get(mut stream: TcpStream, request: &Request) {
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if std::path::Path::new(&path).exists() {
-        if fs::metadata(&path).unwrap().is_file() {
-            stream.write(HttpStatus::OK.as_bytes()).unwrap();
-
+        let meta = fs::metadata(&path).unwrap();
+        if meta.is_file() {
             // TODO Optimize this, hend filetipe headers and load file in chunks
-            let mut file = File::open(path).unwrap();
+            let mut file = File::open(&path).unwrap();
             let mut data: Vec<u8> = Vec::new();
+
+            // Headers
+            let mut headers = ResponseHeaders::new(HttpStatus::OK);
+            headers.set_cross_origin_allow_all();
+            headers.set_content_length(meta.len());
+            let headers = headers.get_headers();
+
             if APP_CONFIG.debug.active {
                 println!(
                     "Debug:\n  Response Headers:{:?}\n",
@@ -128,23 +131,24 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
 
             file.read_to_end(&mut data).unwrap();
             stream.write(data.as_slice()).unwrap();
-        } else {
-            if request.path.ends_with("/") || request.path.ends_with("\\") {
-                if APP_CONFIG.server.list_directories {
-                    stream.write(HttpStatus::OK.as_bytes()).unwrap();
-                    stream.write(HTML_HEADER).unwrap();
-                    stream.write(read_dir(&request).as_bytes()).unwrap();
-                    stream.write(HTML_CLOSE).unwrap();
-                } else {
-                    stream.write(HttpStatus::Forbidden.as_bytes()).unwrap();
-                    stream.write(HTML_HEADER).unwrap();
-                    stream.write(HTML_ERROR_PAGE).unwrap();
-                    stream.write(HTML_CLOSE).unwrap();
-                }
+        } else if meta.is_dir() {
+            if APP_CONFIG.server.list_directories {
+                let mut headers = ResponseHeaders::new(HttpStatus::OK);
+                stream.write(headers.get_headers().as_slice()).unwrap();
+                stream.write(HTML_HEADER).unwrap();
+                stream.write(read_dir(&request).as_bytes()).unwrap();
+                stream.write(HTML_CLOSE).unwrap();
+            } else {
+                let mut headers = ResponseHeaders::new(HttpStatus::Forbidden);
+                stream.write(headers.get_headers().as_slice()).unwrap();
+                stream.write(HTML_HEADER).unwrap();
+                stream.write(HTML_ERROR_PAGE).unwrap();
+                stream.write(HTML_CLOSE).unwrap();
             }
         }
     } else {
-        stream.write(HttpStatus::NotFound.as_bytes()).unwrap();
+        let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
+        stream.write(headers.get_headers().as_slice()).unwrap();
         stream.write(HTML_HEADER).unwrap();
         stream.write(HTML_ERROR_PAGE).unwrap();
         stream.write(HTML_CLOSE).unwrap();
@@ -201,6 +205,7 @@ fn read_dir(request: &Request) -> String {
     result = add_string(&result, format!("<h1>Listing:{}</h1><br />", &request.path));
 
     let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
+
     if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
         result = add_string(
             &result,
