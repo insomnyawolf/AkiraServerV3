@@ -1,9 +1,10 @@
 // Http Headers
-
 // https://tools.ietf.org/html/rfc2616
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+#[derive(Debug)]
 #[allow(dead_code)] // Remooves unused code warnings on compile time
 pub enum HttpStatus {
+    Undefined,
     // Informational 1xx
     Continue,           // 100
     SwitchingProtocols, // 101
@@ -52,11 +53,17 @@ pub enum HttpStatus {
     HTTPVersionNotSupported, // 505
 }
 
+impl Default for HttpStatus {
+    fn default() -> HttpStatus {
+        HttpStatus::Undefined
+    }
+}
+
 impl HttpStatus {
     /* ToDO Low Priority
     pub fn from_str(s: &[u8]) -> Option<MediaType> {
         match s {
-            b"HTTP/1.1 200 OK\r\n\r\n" => Some(HTTP_STATUS::OK),
+            b"HTTP/1.1 200 OK\r\n" => Some(HTTP_STATUS::OK),
             _ => None,
         }
     }
@@ -64,60 +71,59 @@ impl HttpStatus {
 
     pub fn as_bytes(&self) -> &[u8] {
         match *self {
+            HttpStatus::Undefined => b"",
             // Informational 1xx
-            HttpStatus::Continue => b"HTTP/1.1 100 CONTINUE\r\n\r\n",
-            HttpStatus::SwitchingProtocols => b"HTTP/1.1 101 SWITCHING PROTOCOLS\r\n\r\n",
+            HttpStatus::Continue => b"HTTP/1.1 100 CONTINUE\r\n",
+            HttpStatus::SwitchingProtocols => b"HTTP/1.1 101 SWITCHING PROTOCOLS\r\n",
             // Successful 2xx
-            HttpStatus::OK => b"HTTP/1.1 200 OK\r\n\r\n",
-            HttpStatus::Created => b"HTTP/1.1 201 CREATED\r\n\r\n",
-            HttpStatus::Accepted => b"HTTP/1.1 202 ACCEPTED\r\n\r\n",
+            HttpStatus::OK => b"HTTP/1.1 200 OK\r\n",
+            HttpStatus::Created => b"HTTP/1.1 201 CREATED\r\n",
+            HttpStatus::Accepted => b"HTTP/1.1 202 ACCEPTED\r\n",
             HttpStatus::NonAuthoritativeInformation => {
-                b"HTTP/1.1 203 NON AUTHORITATIVE INFORMATION\r\n\r\n"
+                b"HTTP/1.1 203 NON AUTHORITATIVE INFORMATION\r\n"
             }
-            HttpStatus::NoContent => b"HTTP/1.1 204 NO CONTENT\r\n\r\n",
-            HttpStatus::ResetContent => b"HTTP/1.1 205 RESET CONTENT\r\n\r\n",
-            HttpStatus::PartialContent => b"HTTP/1.1 206 PARTIAL CONTENT\r\n\r\n",
+            HttpStatus::NoContent => b"HTTP/1.1 204 NO CONTENT\r\n",
+            HttpStatus::ResetContent => b"HTTP/1.1 205 RESET CONTENT\r\n",
+            HttpStatus::PartialContent => b"HTTP/1.1 206 PARTIAL CONTENT\r\n",
             // Redirection 3xx
-            HttpStatus::MultipleChoices => b"HTTP/1.1 300 MULTIPLE CHOICES\r\n\r\n",
-            HttpStatus::MovedPermanently => b"HTTP/1.1 301 MOVED PERMANENTLY\r\n\r\n",
-            HttpStatus::Found => b"HTTP/1.1 302 FOUND\r\n\r\n",
-            HttpStatus::SeeOther => b"HTTP/1.1 303 SEE OTHER\r\n\r\n",
-            HttpStatus::NotModified => b"HTTP/1.1 304 NOT MODIFIED\r\n\r\n",
-            HttpStatus::UseProxy => b"HTTP/1.1 305 USE PROXY\r\n\r\n",
-            HttpStatus::Unused306 => b"HTTP/1.1 306 \r\n\r\n",
-            HttpStatus::TemporaryRedirect => b"HTTP/1.1 307 TEMPORARY REDIRECT\r\n\r\n",
+            HttpStatus::MultipleChoices => b"HTTP/1.1 300 MULTIPLE CHOICES\r\n",
+            HttpStatus::MovedPermanently => b"HTTP/1.1 301 MOVED PERMANENTLY\r\n",
+            HttpStatus::Found => b"HTTP/1.1 302 FOUND\r\n",
+            HttpStatus::SeeOther => b"HTTP/1.1 303 SEE OTHER\r\n",
+            HttpStatus::NotModified => b"HTTP/1.1 304 NOT MODIFIED\r\n",
+            HttpStatus::UseProxy => b"HTTP/1.1 305 USE PROXY\r\n",
+            HttpStatus::Unused306 => b"HTTP/1.1 306 \r\n",
+            HttpStatus::TemporaryRedirect => b"HTTP/1.1 307 TEMPORARY REDIRECT\r\n",
             // Client Error 4xx
-            HttpStatus::BadRequest => b"HTTP/1.1 400 BAD REQUEST\r\n\r\n",
-            HttpStatus::Unauthorized => b"HTTP/1.1 401 UNAUTHORIZED\r\n\r\n",
-            HttpStatus::PaymentRequired => b"HTTP/1.1 402 PAYMENT REQUIERED\r\n\r\n",
-            HttpStatus::Forbidden => b"HTTP/1.1 403 FORBIDDEN\r\n\r\n",
-            HttpStatus::NotFound => b"HTTP/1.1 404 NOT FOUND\r\n\r\n",
-            HttpStatus::MethodNotAllowed => b"HTTP/1.1 405 METHOD NOT ALLOWED\r\n\r\n",
-            HttpStatus::NotAcceptable => b"HTTP/1.1 406 NOT ACCEPTABLE\r\n\r\n",
+            HttpStatus::BadRequest => b"HTTP/1.1 400 BAD REQUEST\r\n",
+            HttpStatus::Unauthorized => b"HTTP/1.1 401 UNAUTHORIZED\r\n",
+            HttpStatus::PaymentRequired => b"HTTP/1.1 402 PAYMENT REQUIERED\r\n",
+            HttpStatus::Forbidden => b"HTTP/1.1 403 FORBIDDEN\r\n",
+            HttpStatus::NotFound => b"HTTP/1.1 404 NOT FOUND\r\n",
+            HttpStatus::MethodNotAllowed => b"HTTP/1.1 405 METHOD NOT ALLOWED\r\n",
+            HttpStatus::NotAcceptable => b"HTTP/1.1 406 NOT ACCEPTABLE\r\n",
             HttpStatus::ProxyAuthenticationRequired => {
-                b"HTTP/1.1 407 PROXY AUTHENTICATION REQUIERED\r\n\r\n"
+                b"HTTP/1.1 407 PROXY AUTHENTICATION REQUIERED\r\n"
             }
-            HttpStatus::RequestTimeout => b"HTTP/1.1 408 REQUEST TIMEOUT\r\n\r\n",
-            HttpStatus::Conflict => b"HTTP/1.1 409 CONFLICT\r\n\r\n",
-            HttpStatus::Gone => b"HTTP/1.1 410 GONE\r\n\r\n",
-            HttpStatus::LengthRequired => b"HTTP/1.1 411 LENGHT REQUIRED\r\n\r\n",
-            HttpStatus::PreconditionFailed => b"HTTP/1.1 412 PRECONDITION FAILED\r\n\r\n",
-            HttpStatus::RequestEntityTooLarge => b"HTTP/1.1 413 REQUEST ENTITY TOO LARGE\r\n\r\n",
-            HttpStatus::RequestURITooLong => b"HTTP/1.1 414 REQUEST URI TOO LONG\r\n\r\n",
-            HttpStatus::UnsupportedMediaType => b"HTTP/1.1 415 UNSUPPORTED MEDIA TYPE\r\n\r\n",
+            HttpStatus::RequestTimeout => b"HTTP/1.1 408 REQUEST TIMEOUT\r\n",
+            HttpStatus::Conflict => b"HTTP/1.1 409 CONFLICT\r\n",
+            HttpStatus::Gone => b"HTTP/1.1 410 GONE\r\n",
+            HttpStatus::LengthRequired => b"HTTP/1.1 411 LENGHT REQUIRED\r\n",
+            HttpStatus::PreconditionFailed => b"HTTP/1.1 412 PRECONDITION FAILED\r\n",
+            HttpStatus::RequestEntityTooLarge => b"HTTP/1.1 413 REQUEST ENTITY TOO LARGE\r\n",
+            HttpStatus::RequestURITooLong => b"HTTP/1.1 414 REQUEST URI TOO LONG\r\n",
+            HttpStatus::UnsupportedMediaType => b"HTTP/1.1 415 UNSUPPORTED MEDIA TYPE\r\n",
             HttpStatus::RequestedRangeNotSatisfiable => {
-                b"HTTP/1.1 416 REQUEST RANGE NOT SATISFIABLE\r\n\r\n"
+                b"HTTP/1.1 416 REQUEST RANGE NOT SATISFIABLE\r\n"
             }
-            HttpStatus::ExpectationFailed => b"HTTP/1.1 417 EXPECTATION FAILED\r\n\r\n",
+            HttpStatus::ExpectationFailed => b"HTTP/1.1 417 EXPECTATION FAILED\r\n",
             // Server Error 5xx
-            HttpStatus::InternalServerError => b"HTTP/1.1 500 INTERNAL SERVER ERROR\r\n\r\n",
-            HttpStatus::NotImplemented => b"HTTP/1.1 500 NOT IMPLEMENTED\r\n\r\n",
-            HttpStatus::BadGateway => b"HTTP/1.1 500 BAD GATEWAY\r\n\r\n",
-            HttpStatus::ServiceUnavailable => b"HTTP/1.1 500 SERVICE UNAVAILABLE\r\n\r\n",
-            HttpStatus::GatewayTimeout => b"HTTP/1.1 500 GATEWAY TIMEOUT\r\n\r\n",
-            HttpStatus::HTTPVersionNotSupported => {
-                b"HTTP/1.1 500 HTTP VERSION NOT SUPPORTED\r\n\r\n"
-            }
+            HttpStatus::InternalServerError => b"HTTP/1.1 500 INTERNAL SERVER ERROR\r\n",
+            HttpStatus::NotImplemented => b"HTTP/1.1 500 NOT IMPLEMENTED\r\n",
+            HttpStatus::BadGateway => b"HTTP/1.1 500 BAD GATEWAY\r\n",
+            HttpStatus::ServiceUnavailable => b"HTTP/1.1 500 SERVICE UNAVAILABLE\r\n",
+            HttpStatus::GatewayTimeout => b"HTTP/1.1 500 GATEWAY TIMEOUT\r\n",
+            HttpStatus::HTTPVersionNotSupported => b"HTTP/1.1 500 HTTP VERSION NOT SUPPORTED\r\n",
         }
     }
 }
@@ -125,6 +131,8 @@ impl HttpStatus {
 // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 #[derive(Debug, Default)]
 pub struct ResponseHeaders {
+    /** Status Header **/
+    pub status: HttpStatus,
     // Standard response fields
     /** Specifying which web sites can participate in cross-origin resource sharing ( * means any ) **/
     pub access_control_allow_origin: String,
@@ -150,7 +158,7 @@ pub struct ResponseHeaders {
     /** The natural language or languages of the intended audience for the enclosed content **/
     pub content_language: String,
     /** The length of the response body in octets (8-bit bytes) **/
-    pub content_length: String,
+    pub content_length: u64,
     /** An alternate location for the returned data **/
     pub content_location: String,
     /** A Base64-encoded binary MD5 sum of the content of the response **/
@@ -199,17 +207,8 @@ pub struct ResponseHeaders {
     /** The Trailer general field value indicates that the given set of header fields is present in the trailer of a message encoded with chunked transfer coding **/
     pub trailer: String,
     /** The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity **/
-    pub transfer_encoding: String,
-    /** Tracking Status header, value suggested to be sent in response to a DNT(do-not-track), possible values:
-    "!" — under construction
-    "?" — dynamic
-    "G" — gateway to multiple parties
-    "N" — not tracking
-    "T" — tracking
-    "C" — tracking with consent
-    "P" — tracking only if consented
-    "D" — disregarding DNT
-    "U" — updated **/
+    pub transfer_encoding: TransferEncoding,
+    /** Tracking Status header, value suggested to be sent in response to a DNT(do-not-track) **/
     pub tracking_status: String,
     /** Ask the client to upgrade to another protocol **/
     pub upgrade: String,
@@ -228,4 +227,64 @@ pub struct ResponseHeaders {
     allowall - non-standard, allow from any location **/
     pub x_frame_options: String,
     // Common non-standard response fields
+}
+
+#[allow(dead_code)]
+impl ResponseHeaders {
+    pub fn new(status: HttpStatus) -> ResponseHeaders {
+        let mut response = ResponseHeaders::default();
+        response.status = status;
+        response
+    }
+    pub fn set_cross_origin_allow_all(&mut self) {
+        self.access_control_allow_origin = "*".to_string();
+    }
+    pub fn set_cross_origin_allow_host(&mut self, host: String) {
+        self.access_control_allow_origin = host;
+    }
+    pub fn set_content_length(&mut self, content_lenght: u64) {
+        self.content_length = content_lenght;
+    }
+    pub fn set_content_type(&mut self, content_type: String) {
+        self.content_type = content_type;
+    }
+    pub fn get_headers(&mut self) -> Vec<u8> {
+        let mut headers: Vec<u8> = Vec::new();
+        headers.extend_from_slice(&self.status.as_bytes());
+        // Cors
+        if self.access_control_allow_origin != "" {
+            let s = format!(
+                "Access-Control-Allow-Origin: {}\r\n",
+                &self.access_control_allow_origin
+            );
+            headers.extend_from_slice(s.as_bytes());
+        }
+        // Content Lenght
+        if self.content_length != 0 {
+            let s = format!("Content-Length: {}\r\n", &self.content_length);
+            headers.extend_from_slice(s.as_bytes());
+        }
+        headers
+    }
+}
+
+#[allow(dead_code)] // Remove unused code warnings on compile time
+#[derive(Debug)]
+pub enum TransferEncoding {
+    Undefined,                //""
+    UnderConstruction,        // "!"
+    Dynamic,                  // "?"
+    GatewayToMultipleParties, // "G"
+    NotTracking,              // "N"
+    Tracking,                 // "T"
+    TrackingWithConsent,      // "C"
+    TrackingOnlyIfConsented,  // "P"
+    DisregardingDnt,          // "D"
+    Updated,                  // "U"
+}
+
+impl Default for TransferEncoding {
+    fn default() -> TransferEncoding {
+        TransferEncoding::Undefined
+    }
 }
