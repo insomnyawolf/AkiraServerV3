@@ -264,6 +264,7 @@ impl ResponseHeaders {
             let s = format!("Content-Length: {}\r\n", &self.content_length);
             headers.extend_from_slice(s.as_bytes());
         }
+        headers.extend_from_slice(b"\r\n");
         headers
     }
 }
