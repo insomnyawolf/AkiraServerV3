@@ -30,6 +30,18 @@ pub struct Server {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Timeouts {
+    pub request_seconds: u64,
+    pub request_miliseconds: u32,
+}
+
+impl Timeouts {
+    pub fn get_nanoseconds(&self) -> u32 {
+        self.request_miliseconds * 1000000
+    }
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Debug {
     pub active: bool,
 }
@@ -38,6 +50,7 @@ pub struct Debug {
 pub struct Settings {
     pub debug: Debug,
     pub server: Server,
+    pub timeout: Timeouts,
 }
 
 impl Settings {

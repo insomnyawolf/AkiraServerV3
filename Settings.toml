@@ -6,5 +6,9 @@ root_folder = "./" #if windows and you want to use \, remember to escape the pat
 list_directories = true
 workers_per_thread = 1
 
+[Timeout]
+request_seconds = 0
+request_miliseconds = 10 # 1000 Miliseconds = 1 Second
+
 [debug]
 active = true
