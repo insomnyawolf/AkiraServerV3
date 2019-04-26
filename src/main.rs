@@ -86,7 +86,7 @@ fn handle_connection(mut stream: TcpStream) {
     let request = Request::parse(&buffer);
 
     if APP_CONFIG.debug.active {
-        println!("Debug:\n  {:?}\n", &request);
+        println!("Debug:\n  Request{:?}\n", &request);
     }
 
     if request.is_valid_request {
@@ -117,6 +117,15 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
             // TODO Optimize this, hend filetipe headers and load file in chunks
             let mut file = File::open(path).unwrap();
             let mut data: Vec<u8> = Vec::new();
+            if APP_CONFIG.debug.active {
+                println!(
+                    "Debug:\n  Response Headers:{:?}\n",
+                    String::from_utf8_lossy(&headers.as_slice())
+                );
+            }
+
+            stream.write(headers.as_slice()).unwrap();
+
             file.read_to_end(&mut data).unwrap();
             stream.write(data.as_slice()).unwrap();
         } else {
