@@ -1,7 +1,7 @@
 #[derive(Debug, Default)]
 pub struct Request {
     pub is_valid_request: bool,
-    pub method: String,
+    pub method: Method,
     pub path: String,
     pub request_headers: RequestHeaders,
 }
@@ -18,7 +18,7 @@ impl Request {
         let request_arr: Vec<_> = raw.splitn(3, ' ').collect();
 
         if request_arr.len() == 3 {
-            req.method = request_arr[0].to_string();
+            req.method = Method::from_str(&request_arr[0].to_string()).unwrap();
             req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
                 .decode_utf8()
                 .unwrap()
@@ -29,10 +29,6 @@ impl Request {
             req.is_valid_request = true;
         }
         req
-    }
-
-    pub fn get_method(&self) -> Option<Method> {
-        Method::from_str(&self.method)
     }
 
     /** Obtains resource path relative to the specified location **/
@@ -53,6 +49,13 @@ pub enum Method {
     POST,
     PUT,
     TRACE,
+    Unsupported,
+}
+
+impl Default for Method {
+    fn default() -> Method {
+        Method::Unsupported
+    }
 }
 
 impl Method {
@@ -83,6 +86,7 @@ impl Method {
             Method::POST => "POST",
             Method::PUT => "PUT",
             Method::TRACE => "TRACE",
+            Method::Unsupported => "Unsupported",
         }
     }
 }
