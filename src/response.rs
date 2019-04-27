@@ -248,7 +248,7 @@ impl ResponseHeaders {
     pub fn set_content_type(&mut self, content_type: String) {
         self.content_type = content_type;
     }
-    pub fn get_headers(&mut self) -> Vec<u8> {
+    pub fn get_headers(&mut self) -> String {
         let mut headers: Vec<u8> = Vec::new();
         headers.extend_from_slice(&self.status.as_bytes());
         // Cors
@@ -265,7 +265,7 @@ impl ResponseHeaders {
             headers.extend_from_slice(s.as_bytes());
         }
         headers.extend_from_slice(b"\r\n");
-        headers
+        String::from_utf8_lossy(headers.as_slice()).to_string()
     }
 }
 

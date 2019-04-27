@@ -1,19 +1,24 @@
-extern crate config;
-#[macro_use]
-extern crate lazy_static;
 // Url
 extern crate percent_encoding;
+// Time
+extern crate chrono;
+// Config
+extern crate config;
+// Parser
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate derivative;
 
-//use std::thread;
+use std::fmt::Debug;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 
 use num_cpus;
-// use std::time::Duration;
 use threadpool::ThreadPool;
 
 // For Config
@@ -25,6 +30,7 @@ mod response;
 
 use request::*;
 use response::*;
+use std::any::Any;
 use std::time::Duration;
 
 lazy_static! {
@@ -85,15 +91,9 @@ fn handle_connection(stream: TcpStream) {
     //Parse request data
     let request = Request::parse(stream.try_clone().unwrap(), timeout);
 
-    if APP_CONFIG.debug.active {
-        println!(
-            "Debug:\n\tRequest{:?}\n\tRaw{:?}",
-            &request,
-            request.get_raw()
-        );
-    }
-
     if request.is_valid_request {
+        log(&request);
+
         // Switch Equivalent
         match request.method {
             Method::GET => {
@@ -105,7 +105,7 @@ fn handle_connection(stream: TcpStream) {
             }
         }
     } else {
-        println!("Invalid Request\n");
+        log(&"Invalid Request");
     }
 }
 
@@ -122,29 +122,25 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
             let mut headers = ResponseHeaders::new(HttpStatus::OK);
             headers.set_cross_origin_allow_all();
             headers.set_content_length(meta.len());
-            let headers = headers.get_headers();
 
             if APP_CONFIG.debug.active {
-                println!(
-                    "Debug:\n  Response Headers:{:?}\n",
-                    String::from_utf8_lossy(&headers.as_slice())
-                );
+                log(&headers);
             }
 
-            stream.write(headers.as_slice()).unwrap();
+            stream.write(&headers.get_headers().as_bytes()).unwrap();
 
             file.read_to_end(&mut data).unwrap();
             stream.write(data.as_slice()).unwrap();
         } else if meta.is_dir() {
             if APP_CONFIG.server.list_directories {
                 let mut headers = ResponseHeaders::new(HttpStatus::OK);
-                stream.write(headers.get_headers().as_slice()).unwrap();
+                stream.write(headers.get_headers().as_bytes()).unwrap();
                 stream.write(HTML_HEADER).unwrap();
                 stream.write(read_dir(&request).as_bytes()).unwrap();
                 stream.write(HTML_CLOSE).unwrap();
             } else {
                 let mut headers = ResponseHeaders::new(HttpStatus::Forbidden);
-                stream.write(headers.get_headers().as_slice()).unwrap();
+                stream.write(headers.get_headers().as_bytes()).unwrap();
                 stream.write(HTML_HEADER).unwrap();
                 stream.write(HTML_ERROR_PAGE).unwrap();
                 stream.write(HTML_CLOSE).unwrap();
@@ -152,7 +148,7 @@ fn handle_get(mut stream: TcpStream, request: &Request) {
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
-        stream.write(headers.get_headers().as_slice()).unwrap();
+        stream.write(headers.get_headers().as_bytes()).unwrap();
         stream.write(HTML_HEADER).unwrap();
         stream.write(HTML_ERROR_PAGE).unwrap();
         stream.write(HTML_CLOSE).unwrap();
@@ -233,4 +229,20 @@ fn get_web_path(full_path: String, path: &String) -> String {
 
 fn add_string(a: &String, b: String) -> String {
     a.to_string() + &b
+}
+
+fn log<T: Any + Debug>(data: &T) {
+    if APP_CONFIG.debug.active {
+        let s = format!(
+            "Debug:\t{time}\n\t{dat:?}\n",
+            time = chrono::Local::now(),
+            dat = data,
+        );
+        if APP_CONFIG.debug.log_to_file {
+            // ToDo
+        }
+        if APP_CONFIG.debug.log_to_console {
+            println!("{}", s);
+        }
+    }
 }

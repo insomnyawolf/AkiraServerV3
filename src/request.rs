@@ -2,8 +2,11 @@ use std::io::Read;
 use std::net::TcpStream;
 use std::time::Duration;
 
-#[derive(Debug, Default)]
+#[derive(Derivative)]
+#[derivative(Debug)]
+#[derive(Default)]
 pub struct Request {
+    #[derivative(Debug = "ignore")]
     raw: String,
     pub is_valid_request: bool,
     pub method: Method,
