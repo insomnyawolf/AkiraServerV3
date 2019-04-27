@@ -16,6 +16,10 @@
 ### Android
 `cargo rustc --release --target=armv7-linux-androideabi`
 
+## Targets
+
+[Rust Platform Support](https://forge.rust-lang.org/platform-support.html)  
+
 All Targets:
 ```
 aarch64-apple-ios
