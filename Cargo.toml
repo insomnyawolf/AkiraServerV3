@@ -25,6 +25,10 @@ serde = "*"
 #url decode
 percent-encoding = "*"
 
+#debug
+chrono = "*"
+derivative = "*"
+
 [profile.dev]
 opt-level = 0      # controls the `--opt-level` the compiler builds with.
                    # 0-1 is good for debugging. 2 is well-optimized. Max is 3.
