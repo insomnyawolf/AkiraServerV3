@@ -346,7 +346,7 @@ impl RequestHeaders {
                 &current,
                 "Warning: ",
             ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.version, &current, "HTTP ")
+            } else if RequestHeaders::generate_field_string(&mut headers.version, &current, "HTTP/")
             {
             } else if RequestHeaders::generate_field_string(
                 &mut headers.upgrade_insecure_requests,
