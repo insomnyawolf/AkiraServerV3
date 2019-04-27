@@ -100,13 +100,18 @@ fn handle_connection(stream: TcpStream) {
                 handle_get(stream, &request);
             }
             _ => {
-                println!("Unsupported Method\n");
-                //test2(stream, request);
+                handle_unsupported(stream);
             }
         }
     } else {
         log(&"Invalid Request");
     }
+}
+
+fn handle_unsupported(mut stream: TcpStream) {
+    log(&"Unsupported Method");
+    let mut headers = ResponseHeaders::new(HttpStatus::NotImplemented);
+    stream.write(&headers.get_headers().as_bytes()).unwrap();
 }
 
 fn handle_get(mut stream: TcpStream, request: &Request) {
