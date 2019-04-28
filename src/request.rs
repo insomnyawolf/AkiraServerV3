@@ -245,164 +245,105 @@ impl RequestHeaders {
                 for data in arr {
                     headers.accept.push(data.to_string());
                 }
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(
                 &mut headers.accept_charset,
                 &current,
                 "Accept-Charset: ",
             ) {
-            } else if RequestHeaders::generate_field_string_vec(
+            } else if generate_field_string_vec(
                 &mut headers.accept_encoding,
                 &current,
                 "Accept-Encoding: ",
             ) {
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(
                 &mut headers.accept_language,
                 &current,
                 "Accept-Language: ",
             ) {
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(
                 &mut headers.accept_datetime,
                 &current,
                 "Accept-Datetime: ",
             ) {
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(
                 &mut headers.access_control_request_method,
                 &current,
                 "Access-Control-Request-Method: ",
             ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.authorization,
-                &current,
-                "Authorization: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.cache_control,
-                &current,
-                "Cache-Control: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.connection,
-                &current,
-                "Connection: ",
-            ) {
-            } else if RequestHeaders::generate_field_u64(
-                &mut headers.content_length,
-                &current,
-                "Content-Length: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.content_md5,
-                &current,
-                "Content-MD5: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.content_type,
-                &current,
-                "Content-Type: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.cookie,
-                &current,
-                "Cookie: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.date, &current, "Date: ") {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.expect,
-                &current,
-                "Expect: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.forwarded,
-                &current,
-                "Forwarded: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.from, &current, "From: ") {
-            } else if RequestHeaders::generate_field_string(&mut headers.host, &current, "Host: ") {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.max_forwards,
-                &current,
-                "Max-Forwards: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.origin,
-                &current,
-                "Origin: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.pragma,
-                &current,
-                "Pragma: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(&mut headers.authorization, &current, "Authorization: ")
+            {
+            } else if generate_field_string(&mut headers.cache_control, &current, "Cache-Control: ")
+            {
+            } else if generate_field_string(&mut headers.connection, &current, "Connection: ") {
+            } else if generate_field_u64(&mut headers.content_length, &current, "Content-Length: ")
+            {
+            } else if generate_field_string(&mut headers.content_md5, &current, "Content-MD5: ") {
+            } else if generate_field_string(&mut headers.content_type, &current, "Content-Type: ") {
+            } else if generate_field_string(&mut headers.cookie, &current, "Cookie: ") {
+            } else if generate_field_string(&mut headers.date, &current, "Date: ") {
+            } else if generate_field_string(&mut headers.expect, &current, "Expect: ") {
+            } else if generate_field_string(&mut headers.forwarded, &current, "Forwarded: ") {
+            } else if generate_field_string(&mut headers.from, &current, "From: ") {
+            } else if generate_field_string(&mut headers.host, &current, "Host: ") {
+            } else if generate_field_string(&mut headers.max_forwards, &current, "Max-Forwards: ") {
+            } else if generate_field_string(&mut headers.origin, &current, "Origin: ") {
+            } else if generate_field_string(&mut headers.pragma, &current, "Pragma: ") {
+            } else if generate_field_string(
                 &mut headers.proxy_authorization,
                 &current,
                 "Proxy-Authorization: ",
             ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.range, &current, "Range: ")
-            {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.referer,
-                &current,
-                "Referer: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.transfer_encodings,
-                &current,
-                "TE: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.user_agent,
-                &current,
-                "User-Agent: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.via, &current, "Via: ") {
-            } else if RequestHeaders::generate_field_string(
-                &mut headers.warning,
-                &current,
-                "Warning: ",
-            ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.version, &current, "HTTP/")
-            {
-            } else if RequestHeaders::generate_field_string(
+            } else if generate_field_string(&mut headers.range, &current, "Range: ") {
+            } else if generate_field_string(&mut headers.referer, &current, "Referer: ") {
+            } else if generate_field_string(&mut headers.transfer_encodings, &current, "TE: ") {
+            } else if generate_field_string(&mut headers.user_agent, &current, "User-Agent: ") {
+            } else if generate_field_string(&mut headers.via, &current, "Via: ") {
+            } else if generate_field_string(&mut headers.warning, &current, "Warning: ") {
+            } else if generate_field_string(&mut headers.version, &current, "HTTP/") {
+            } else if generate_field_string(
                 &mut headers.upgrade_insecure_requests,
                 &current,
                 "Upgrade-Insecure-Requests: ",
             ) {
-            } else if RequestHeaders::generate_field_string(&mut headers.dnt, &current, "DNT: ") {
+            } else if generate_field_string(&mut headers.dnt, &current, "DNT: ") {
             } else {
-                headers.other.push(current);
+                headers.other.push(current.to_string());
             }
         }
         headers
     }
+}
 
-    fn generate_field_string(field: &mut String, data: &String, pattern: &str) -> bool {
-        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
-            *field = data[pattern.len()..].to_string();
-            return true;
-        }
-        false
+fn generate_field_string(field: &mut String, data: &str, pattern: &str) -> bool {
+    if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+        *field = data[pattern.len()..].to_string();
+        return true;
     }
+    false
+}
 
-    fn generate_field_string_vec(field: &mut Vec<String>, data: &String, pattern: &str) -> bool {
-        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
-            let s = data[pattern.len()..].to_string();
-            let values: Vec<&str> = s.split(" ").collect();
-            for value in values {
-                field.push(value.to_string());
-            }
-            return true;
+fn generate_field_string_vec(field: &mut Vec<String>, data: &str, pattern: &str) -> bool {
+    if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+        let s = data[pattern.len()..].to_string();
+        let values: Vec<&str> = s.split(" ").collect();
+        for value in values {
+            field.push(value.to_string());
         }
-        false
+        return true;
     }
+    false
+}
 
-    fn generate_field_u64(field: &mut u64, data: &String, pattern: &str) -> bool {
-        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
-            *field = data[pattern.len()..].parse::<u64>().unwrap();
-            return true;
-        }
-        false
+fn generate_field_u64(field: &mut u64, data: &str, pattern: &str) -> bool {
+    if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+        *field = data[pattern.len()..].parse::<u64>().unwrap();
+        return true;
     }
+    false
+}
+
+fn generate_field_vec_u8(field: &mut Vec<u8>, data: &str) {
+    *field = data.as_bytes().to_owned();
 }
 
 #[derive(Debug, Default, PartialEq)]
