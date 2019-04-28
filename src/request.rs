@@ -372,15 +372,50 @@ impl MultipartFormData {
 #[derive(Debug, Default, PartialEq)]
 pub struct MultipartFormElement {
     //pub data: Vec<String>,
+    pub name: String,
+    pub content: String,
+    pub is_file: bool,
+    pub filename: String,
+    pub content_type: String,
+    pub file: Vec<u8>,
+    pub other: Vec<String>,
 }
 
 impl MultipartFormElement {
-    pub fn new(data: String) -> MultipartFormElement {
+    pub fn new(raw: String) -> MultipartFormElement {
         let mut element = MultipartFormElement::default();
         //element.data = ;
-        let data: Vec<&str> = data.split("\r\n\r\n").collect();
-        for line in data {
-            println!("New:{}", line);
+        let data: Vec<&str> = raw.split("\r\n\r\n").collect();
+
+        let len = data.len();
+
+        if len > 1 {
+            let info: Vec<&str> = data.clone()[0].split("\r\n").collect();
+            for current in info {
+                if generate_field_string(&mut element.content_type, &current, "Content-Type: ") {
+                    element.is_file = true;
+                } else {
+                    let inf: Vec<&str> = current.split("\"; ").collect();
+                    for i in inf {
+                        if generate_field_string(&mut element.name, &i, "name=\"") {
+                            element.name = element.name.replace("\"", "");
+                        } else if generate_field_string(&mut element.filename, &i, "filename=\"") {
+                            element.filename = element.filename.replace("\"", "");
+                        } else {
+                            element.other.push(i.to_string());
+                        }
+                    }
+                }
+            }
+        } else {
+            for s in &data[2..] {
+                element.other.push(s.to_string());
+            }
+        }
+        if element.is_file {
+            generate_field_vec_u8(&mut element.file, &data[1]);
+        } else {
+            element.content = data[1].to_string();
         }
         element
     }
