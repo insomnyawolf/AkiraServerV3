@@ -12,6 +12,7 @@ pub struct Request {
     pub method: Method,
     pub path: String,
     pub request_headers: RequestHeaders,
+    pub form_data: FormData,
 }
 
 impl Request {
@@ -34,14 +35,26 @@ impl Request {
 
         let request_arr: Vec<_> = req.raw.splitn(3, ' ').collect();
 
-        if request_arr.len() == 3 {
+        let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
+
+        if request_arr.len() >= 3 {
             req.method = Method::from_str(&request_arr[0].to_string()).unwrap();
             req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
                 .decode_utf8()
                 .unwrap()
                 .to_string();
 
-            req.request_headers = RequestHeaders::parse(request_arr[2]);
+            let data: Vec<&str> = request_arr[2]
+                .split("content-type: multipart/form-data; ")
+                .collect();
+            let data_lenght = data.len();
+            if data_lenght > 0 {
+                req.request_headers = RequestHeaders::parse(data[0]);
+            }
+            if data_lenght > 1 {
+                req.form_data = FormData::parse(data[1])
+            }
+
             req.is_valid_request = true;
         }
         req
@@ -204,10 +217,10 @@ pub struct RequestHeaders {
 }
 
 impl RequestHeaders {
-    pub fn parse(client_str: &str) -> RequestHeaders {
+    pub fn parse(raw: &str) -> RequestHeaders {
         let mut headers = RequestHeaders::default();
 
-        let client_arr: Vec<&str> = client_str.rsplit("\r\n").collect();
+        let client_arr: Vec<&str> = raw.rsplit("\r\n").collect();
 
         // ToDo Improove this loop
         for data in client_arr {
@@ -367,5 +380,23 @@ impl RequestHeaders {
             return true;
         }
         false
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct FormData {
+    pub data: String,
+}
+
+impl FormData {
+    pub fn parse(raw: &str) -> FormData {
+        let mut form_data = FormData::default();
+        /*let data: Vec<&str> = raw.trim_start_matches("boundary=").rsplit("").collect();
+        for thing in data {
+            println!("Dat\n{}\nDat", thing);
+        }*/
+        println!("{}", raw);
+        form_data.data = raw.to_string();
+        form_data
     }
 }
