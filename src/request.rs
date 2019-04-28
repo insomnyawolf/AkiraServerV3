@@ -229,10 +229,8 @@ impl RequestHeaders {
         let client_arr: Vec<&str> = raw.rsplit("\r\n").collect();
 
         // ToDo Improove this loop
-        for data in client_arr {
-            let current = data.to_string();
-
-            if RequestHeaders::generate_field_string(
+        for current in client_arr {
+            if generate_field_string(
                 &mut headers.acceptable_instance_manipulations,
                 &current,
                 "A-IM: ",
