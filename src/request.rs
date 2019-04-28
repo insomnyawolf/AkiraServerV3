@@ -12,7 +12,7 @@ pub struct Request {
     pub method: Method,
     pub path: String,
     pub request_headers: RequestHeaders,
-    pub form_data: FormData,
+    pub form_data: MultipartFormData,
 }
 
 impl Request {
