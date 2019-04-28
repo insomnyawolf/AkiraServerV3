@@ -33,7 +33,7 @@ impl Request {
             .to_string()
             .replace('\u{0}', "");
 
-        let request_arr: Vec<_> = req.raw.splitn(3, ' ').collect();
+        //println!("{}\n", req.raw);
 
         let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
 
@@ -44,15 +44,21 @@ impl Request {
                 .unwrap()
                 .to_string();
 
-            let data: Vec<&str> = request_arr[2]
-                .split("content-type: multipart/form-data; ")
-                .collect();
-            let data_lenght = data.len();
-            if data_lenght > 0 {
-                req.request_headers = RequestHeaders::parse(data[0]);
-            }
-            if data_lenght > 1 {
-                req.form_data = FormData::parse(data[1])
+            if request_arr[2].contains("boundary=--------------------------") {
+                let data = request_arr[2].replace("boundary=", "");
+                let split_data: Vec<&str> = data.split("--------------------------").collect();
+
+                let mut multipart_form = MultipartFormData::default();
+                for thing in split_data {
+                    if thing.starts_with("--") {
+                        multipart_form.add(thing.to_string());
+                    } else {
+                        req.request_headers = RequestHeaders::parse(thing);
+                    }
+                }
+                req.form_data = multipart_form;
+            } else {
+                req.request_headers = RequestHeaders::parse(request_arr[2]);
             }
 
             req.is_valid_request = true;
@@ -244,14 +250,11 @@ impl RequestHeaders {
                 &current,
                 "Accept-Charset: ",
             ) {
-            } else if current.starts_with("Accept-Encoding: ") {
-                let arr: Vec<&str> = current
-                    .trim_start_matches("Accept-Encoding: ")
-                    .split(" ")
-                    .collect();
-                for data in arr {
-                    headers.accept_encoding.push(data.to_string());
-                }
+            } else if RequestHeaders::generate_field_string_vec(
+                &mut headers.accept_encoding,
+                &current,
+                "Accept-Encoding: ",
+            ) {
             } else if RequestHeaders::generate_field_string(
                 &mut headers.accept_language,
                 &current,
@@ -282,12 +285,11 @@ impl RequestHeaders {
                 &current,
                 "Connection: ",
             ) {
-            } else if current.starts_with("Content-Length: ") {
-                headers.content_length = current
-                    .trim_start_matches("Content-Length: ")
-                    .to_string()
-                    .parse::<u64>()
-                    .unwrap();
+            } else if RequestHeaders::generate_field_u64(
+                &mut headers.content_length,
+                &current,
+                "Content-Length: ",
+            ) {
             } else if RequestHeaders::generate_field_string(
                 &mut headers.content_md5,
                 &current,
@@ -375,28 +377,72 @@ impl RequestHeaders {
     }
 
     fn generate_field_string(field: &mut String, data: &String, pattern: &str) -> bool {
-        if data.starts_with(pattern) {
-            *field = data.trim_start_matches(pattern).to_string();
+        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+            *field = data[pattern.len()..].to_string();
+            return true;
+        }
+        false
+    }
+
+    fn generate_field_string_vec(field: &mut Vec<String>, data: &String, pattern: &str) -> bool {
+        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+            let s = data[pattern.len()..].to_string();
+            let values: Vec<&str> = s.split(" ").collect();
+            for value in values {
+                field.push(value.to_string());
+            }
+            return true;
+        }
+        false
+    }
+
+    fn generate_field_u64(field: &mut u64, data: &String, pattern: &str) -> bool {
+        if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
+            *field = data[pattern.len()..].parse::<u64>().unwrap();
             return true;
         }
         false
     }
 }
 
-#[derive(Debug, Default)]
-pub struct FormData {
-    pub data: String,
+#[derive(Debug, Default, PartialEq)]
+pub struct MultipartFormData {
+    pub elements: Vec<MultipartFormElement>,
+    pub other: Vec<String>,
 }
 
-impl FormData {
-    pub fn parse(raw: &str) -> FormData {
-        let mut form_data = FormData::default();
-        /*let data: Vec<&str> = raw.trim_start_matches("boundary=").rsplit("").collect();
-        for thing in data {
-            println!("Dat\n{}\nDat", thing);
-        }*/
-        println!("{}", raw);
-        form_data.data = raw.to_string();
-        form_data
+impl MultipartFormData {
+    pub fn add(&mut self, data: String) {
+        let stripped_data = &data[28..];
+        if stripped_data != "\r\n" {
+            let content_disposition = "Content-Disposition: form-data; ";
+            if stripped_data.starts_with(content_disposition) {
+                self.elements.push(MultipartFormElement::new(
+                    stripped_data[content_disposition.len()..]
+                        .trim_end_matches("\r\n")
+                        .to_string(),
+                ));
+            } else {
+                self.other.push(stripped_data.to_string());
+            }
+        }
+    }
+}
+
+//ToDO Actually parse form fields
+#[derive(Debug, Default, PartialEq)]
+pub struct MultipartFormElement {
+    //pub data: Vec<String>,
+}
+
+impl MultipartFormElement {
+    pub fn new(data: String) -> MultipartFormElement {
+        let mut element = MultipartFormElement::default();
+        //element.data = ;
+        let data: Vec<&str> = data.split("\r\n\r\n").collect();
+        for line in data {
+            println!("New:{}", line);
+        }
+        element
     }
 }
