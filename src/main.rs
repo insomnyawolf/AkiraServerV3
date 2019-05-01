@@ -16,7 +16,7 @@ use std::fmt::Debug;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::net::{TcpListener, TcpStream};
+use std::net::{Shutdown, TcpListener, TcpStream};
 
 use num_cpus;
 use threadpool::ThreadPool;
@@ -80,7 +80,7 @@ fn server() {
     }
 }
 
-fn handle_connection(stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream) {
     // Create a Duration ans set is as timeout
     // That way the server doesnt keep waiting for more bytes
     let timeout = Some(Duration::new(
@@ -97,24 +97,28 @@ fn handle_connection(stream: TcpStream) {
         // Switch Equivalent
         match request.method {
             Method::GET => {
-                handle_get(stream, &request);
+                handle_get(&stream, &request);
             }
             _ => {
-                handle_unsupported(stream);
+                handle_unsupported(&stream);
             }
         }
     } else {
         log(&"Invalid Request");
     }
+
+    // Avoid Dead Connections?
+    stream.flush().ok().unwrap();
+    stream.shutdown(Shutdown::Both).ok().unwrap();
 }
 
-fn handle_unsupported(mut stream: TcpStream) {
+fn handle_unsupported(mut stream: &TcpStream) {
     log(&"Unsupported Method");
     let mut headers = ResponseHeaders::new(HttpStatus::NotImplemented);
     stream.write(&headers.get_headers().as_bytes()).unwrap();
 }
 
-fn handle_get(mut stream: TcpStream, request: &Request) {
+fn handle_get(mut stream: &TcpStream, request: &Request) {
     let path = request.get_local_path(&APP_CONFIG.server.root_folder);
     if std::path::Path::new(&path).exists() {
         let meta = fs::metadata(&path).unwrap();
