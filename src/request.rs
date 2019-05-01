@@ -344,9 +344,10 @@ fn generate_field_vec_u8(field: &mut Vec<u8>, data: &str) {
     *field = data.as_bytes().to_owned();
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, Default)] // , PartialEq
 pub struct MultipartFormData {
-    pub elements: Vec<MultipartFormElement>,
+    pub multipart_form_field: Vec<MultipartFormField>,
+    pub multipart_file: Vec<MultipartFile>,
     pub other: Vec<String>,
 }
 
@@ -356,14 +357,54 @@ impl MultipartFormData {
         if stripped_data != "\r\n" {
             let content_disposition = "Content-Disposition: form-data; ";
             if stripped_data.starts_with(content_disposition) {
-                self.elements.push(MultipartFormElement::new(
+                let element = MultipartFormElement::new(
                     stripped_data[content_disposition.len()..]
                         .trim_end_matches("\r\n")
                         .to_string(),
-                ));
+                );
+                if element.is_file {
+                    self.multipart_file.push(MultipartFile::new(element));
+                } else {
+                    self.multipart_form_field
+                        .push(MultipartFormField::new(element))
+                }
             } else {
                 self.other.push(stripped_data.to_string());
             }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct MultipartFile {
+    pub name: String,
+    pub filename: String,
+    pub content_type: String,
+    pub file: Vec<u8>,
+}
+
+impl MultipartFile {
+    pub fn new(element: MultipartFormElement) -> MultipartFile {
+        MultipartFile {
+            name: element.name,
+            filename: element.filename,
+            content_type: element.content_type,
+            file: element.file,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct MultipartFormField {
+    pub name: String,
+    pub value: String,
+}
+
+impl MultipartFormField {
+    pub fn new(element: MultipartFormElement) -> MultipartFormField {
+        MultipartFormField {
+            name: element.name,
+            value: element.content,
         }
     }
 }
