@@ -21,17 +21,22 @@ use std::net::{Shutdown, TcpListener, TcpStream};
 use num_cpus;
 use threadpool::ThreadPool;
 
+use std::any::Any;
+use std::time::Duration;
+
 // For Config
 mod settings;
 
 // Request Module
 mod request;
+
+use crate::request::request::Request;
+use crate::request::method::Method;
+use crate::response::headers::ResponseHeaders;
+use crate::response::http_status::HttpStatus;
+
 mod response;
 
-use request::*;
-use response::*;
-use std::any::Any;
-use std::time::Duration;
 
 lazy_static! {
     #[derive(Debug)]
