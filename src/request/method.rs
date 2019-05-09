@@ -32,7 +32,7 @@ impl Method {
             "POST" => Some(Method::POST),
             "PUT" => Some(Method::PUT),
             "TRACE" => Some(Method::TRACE),
-            _ => None,
+            _ => Some(Method::Unsupported),
         }
     }
 

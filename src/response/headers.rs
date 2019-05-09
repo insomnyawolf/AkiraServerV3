@@ -1,4 +1,4 @@
-use crate::response::http_status::*;
+use crate::response::status::*;
 
 // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 #[derive(Debug, Default)]

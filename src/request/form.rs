@@ -1,31 +1,49 @@
 use crate::request::utils::*;
 
 #[derive(Debug, Default)] // , PartialEq
-pub struct MultipartFormData {
-    pub multipart_form_field: Vec<MultipartFormField>,
+pub struct FormData {
+    pub form_field: Vec<FormField>,
     pub multipart_file: Vec<MultipartFile>,
     pub other: Vec<String>,
 }
 
-impl MultipartFormData {
-    pub fn add(&mut self, data: String) {
-        let stripped_data = &data[28..];
-        if stripped_data != "\r\n" {
-            let content_disposition = "Content-Disposition: form-data; ";
-            if stripped_data.starts_with(content_disposition) {
-                let element = MultipartFormElement::new(
-                    stripped_data[content_disposition.len()..]
-                        .trim_end_matches("\r\n")
-                        .to_string(),
-                );
-                if element.is_file {
-                    self.multipart_file.push(MultipartFile::new(element));
-                } else {
-                    self.multipart_form_field
-                        .push(MultipartFormField::new(element))
-                }
+impl FormData {
+    pub fn add_url_encoded(&mut self, data: String) {
+        let fields: Vec<&str> = data.rsplit("&").collect();
+        for field in fields {
+            if field.contains("="){
+                let entry: Vec<&str> = field.split("=").collect();
+                self.form_field.push(FormField{
+                    name: percent_encoding::percent_decode(entry[0].as_bytes()).decode_utf8_lossy().to_string(),
+                    value:percent_encoding::percent_decode(entry[1].as_bytes()).decode_utf8_lossy().to_string(),
+                });
             } else {
-                self.other.push(stripped_data.to_string());
+                self.other.push(field.to_string());
+            }
+        }
+    }
+    pub fn add_multipart(&mut self, data: String, bounds: &String) {
+        let mut elements:Vec<&str> = data.split(bounds).collect();
+        for mut element_str in elements {
+            element_str = &element_str.trim_end_matches("\r\n--");
+            if element_str != "\r\n" || element_str != "" {
+                let content_disposition = "Content-Disposition: form-data; ";
+                if element_str.contains(content_disposition) {
+                    let element = MultipartFormElement::new(
+                        element_str.replace(content_disposition, "")
+                            .to_string(),
+                    );
+                    if element.is_file {
+                        self.multipart_file.push(MultipartFile::new(element));
+                    } else {
+                        self.form_field
+                            .push(FormField::new(element))
+                    }
+                } else {
+                    if element_str != "--" && element_str != "--\r\n"{
+                        self.other.push(element_str.to_string());
+                    }
+                }
             }
         }
     }
@@ -51,14 +69,14 @@ impl MultipartFile {
 }
 
 #[derive(Debug)]
-pub struct MultipartFormField {
+pub struct FormField {
     pub name: String,
     pub value: String,
 }
 
-impl MultipartFormField {
-    pub fn new(element: MultipartFormElement) -> MultipartFormField {
-        MultipartFormField {
+impl FormField {
+    pub fn new(element: MultipartFormElement) -> FormField {
+        FormField {
             name: element.name,
             value: element.content,
         }

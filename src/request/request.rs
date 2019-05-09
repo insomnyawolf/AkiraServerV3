@@ -1,4 +1,4 @@
-use crate::request::multipart_form::*;
+use crate::request::form::*;
 use crate::request::headers::*;
 use crate::request::method::*;
 
@@ -16,7 +16,7 @@ pub struct Request {
     pub method: Method,
     pub path: String,
     pub request_headers: RequestHeaders,
-    pub form_data: MultipartFormData,
+    pub form_data: FormData,
 }
 
 impl Request {
@@ -24,6 +24,8 @@ impl Request {
     pub fn parse(mut stream: TcpStream, timeout: Option<Duration>) -> Request {
         // Create Structure with default values
         let mut req = Request::default();
+        let mut form_data = FormData::default();
+        let mut headers = RequestHeaders::default();
 
         // Create Empty Byte Vector
         let mut buffer_full: Vec<u8> = Vec::new();
@@ -48,23 +50,21 @@ impl Request {
                 .unwrap()
                 .to_string();
 
-            if request_arr[2].contains("boundary=--------------------------") {
-                let data = request_arr[2].replace("boundary=", "");
-                let split_data: Vec<&str> = data.split("--------------------------").collect();
+            let rs: Vec<&str> = request_arr[2].splitn(2,"\r\n\r\n").collect();
 
-                let mut multipart_form = MultipartFormData::default();
-                for thing in split_data {
-                    if thing.starts_with("--") {
-                        multipart_form.add(thing.to_string());
-                    } else {
-                        req.request_headers = RequestHeaders::parse(thing);
-                    }
+            for part in rs {
+                if part.starts_with("HTTP") {
+                    headers = RequestHeaders::parse(part);
+                } else if part.contains(&headers.content_bounds) && &headers.content_bounds != "" {
+                    form_data.add_multipart(part.to_string(), &headers.content_bounds);
+                } else if part.contains("="){
+                    form_data.add_url_encoded(part.to_string());
+                } else {
+                    println!("Failed:\n{}\n", part);
                 }
-                req.form_data = multipart_form;
-            } else {
-                req.request_headers = RequestHeaders::parse(request_arr[2]);
             }
-
+            req.request_headers = headers;
+            req.form_data = form_data;
             req.is_valid_request = true;
         }
         req

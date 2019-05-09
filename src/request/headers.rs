@@ -31,6 +31,8 @@ pub struct RequestHeaders {
     pub content_md5: String,
     /** The Media type of the body of the request (used with POST and PUT requests) **/
     pub content_type: String,
+    /** Multipart Forms Bounds **/
+    pub content_bounds: String,
     /** An HTTP cookie previously sent by the server with Set-Cookie (below) **/
     pub cookie: String,
     /** The date and time at which the message was originated **/
@@ -146,6 +148,18 @@ impl RequestHeaders {
             {
             } else if generate_field_string(&mut headers.content_md5, &current, "Content-MD5: ") {
             } else if generate_field_string(&mut headers.content_type, &current, "Content-Type: ") {
+                let t:Vec<&str> = current.split("; ").collect();
+                if t.len() > 1 {
+                    let z = t[1];
+                    let bound_str = "boundary=";
+                    if z.starts_with(bound_str){
+                        let bond_str_len = bound_str.len();
+                        let bounds = z[bond_str_len..].to_string();
+                        headers.content_type = headers.content_type.trim_end_matches(&bounds).to_string();
+                        headers.content_type = headers.content_type.trim_end_matches("; boundary=--").to_string();
+                        headers.content_bounds = bounds;
+                    }
+                }
             } else if generate_field_string(&mut headers.cookie, &current, "Cookie: ") {
             } else if generate_field_string(&mut headers.date, &current, "Date: ") {
             } else if generate_field_string(&mut headers.expect, &current, "Expect: ") {

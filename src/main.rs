@@ -33,7 +33,7 @@ mod request;
 use crate::request::request::Request;
 use crate::request::method::Method;
 use crate::response::headers::ResponseHeaders;
-use crate::response::http_status::HttpStatus;
+use crate::response::status::HttpStatus;
 
 mod response;
 
