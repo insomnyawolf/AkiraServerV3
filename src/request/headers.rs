@@ -46,14 +46,6 @@ pub struct RequestHeaders {
     pub from: String,
     /// The domain name of the server (for virtual hosting), and the TCP port number on which the server is listening
     pub host: String,
-    /* ToDo Omited
-    HTTP2-Settings
-    If-Match
-    If-Modified-Since
-    If-None-Match
-    If-Range
-    If-Unmodified-Since
-    */
     /// Limit the number of times the message can be forwarded through proxies or gateways
     pub max_forwards: String,
     /// Initiates a request for cross-origin resource sharing (asks server for Access-Control-* response fields)

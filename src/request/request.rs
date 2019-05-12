@@ -9,8 +9,8 @@ use std::time::Duration;
 #[derive(Derivative)]
 #[derivative(Debug)]
 #[derive(Default)]
-/// This Struct Contains all the request data parsed and ready to use
 // ToDo UrlEncoded Variables
+/// This Struct Contains all the request data parsed and ready to use
 pub struct Request {
     #[derivative(Debug = "ignore")]
     raw: String,

@@ -1,11 +1,6 @@
-/**
-Check if the string estarts with the defined pattern
-If starts with the pattern, removes the pattern and stores the remeaning data to the field
-as
-```
-String
-```
-**/
+/// Check if the string estarts with the defined pattern
+/// If starts with the pattern, removes the pattern and stores the remeaning data to the field
+/// as `` String ``
 pub fn generate_field_string(field: &mut String, data: &str, pattern: &str) -> bool {
     if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
         *field = data[pattern.len()..].to_string();
@@ -14,14 +9,9 @@ pub fn generate_field_string(field: &mut String, data: &str, pattern: &str) -> b
     false
 }
 
-/**
-Check if the string estarts with the defined pattern
-If starts with the pattern, removes the pattern and stores the remeaning data to the field
-as
-```
-Vec<String>
-```
-**/
+/// Check if the string estarts with the defined pattern
+/// If starts with the pattern, removes the pattern and stores the remeaning data to the field
+/// as `` Vec<String> ``
 pub fn generate_field_string_vec(field: &mut Vec<String>, data: &str, pattern: &str) -> bool {
     if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
         let s = data[pattern.len()..].to_string();
@@ -34,14 +24,9 @@ pub fn generate_field_string_vec(field: &mut Vec<String>, data: &str, pattern: &
     false
 }
 
-/**
-Check if the string estarts with the defined pattern
-If starts with the pattern, removes the pattern and stores the remeaning data to the field
-as
-```
-u64
-```
-**/
+/// Check if the string estarts with the defined pattern
+/// If starts with the pattern, removes the pattern and stores the remeaning data to the field
+/// as `` u64 ``
 pub fn generate_field_u64(field: &mut u64, data: &str, pattern: &str) -> bool {
     if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
         *field = data[pattern.len()..].parse::<u64>().unwrap();
@@ -50,6 +35,9 @@ pub fn generate_field_u64(field: &mut u64, data: &str, pattern: &str) -> bool {
     false
 }
 
+/// Check if the string estarts with the defined pattern
+/// If starts with the pattern, removes the pattern and stores the remeaning data to the field
+/// as `` [u8] ``
 pub fn generate_field_vec_u8(field: &mut Vec<u8>, data: &str) {
     *field = data.as_bytes().to_owned();
 }

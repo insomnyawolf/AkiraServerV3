@@ -1,10 +1,10 @@
 // https://tools.ietf.org/html/rfc2616#section-5.1.1
 
 #[derive(Debug, PartialEq)]
-/** Contains references to all possible request methods
-    Can be parsed from string
-    Can be converted to string
-**/
+
+/// Contains references to all possible request methods  
+/// Can be parsed from string  
+/// Can be converted to string  
 pub enum Method {
     CONNECT,
     DELETE,
@@ -40,8 +40,8 @@ impl Method {
             _ => Some(Method::Unsupported),
         }
     }
-    /// Converts Method to string
-    pub fn as_str(&self) -> &str {
+    ///  Converts the given value to a String
+    pub fn to_str(&self) -> &str {
         match *self {
             Method::CONNECT => "CONNECT",
             Method::DELETE => "DELETE",

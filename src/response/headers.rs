@@ -106,23 +106,29 @@ pub struct ResponseHeaders {
 
 #[allow(dead_code)]
 impl ResponseHeaders {
+    /// Create empty response header struct
     pub fn new(status: HttpStatus) -> ResponseHeaders {
         let mut response = ResponseHeaders::default();
         response.status = status;
         response
     }
+    /// Sets cross origin request from all sources to acepted
     pub fn set_cross_origin_allow_all(&mut self) {
         self.access_control_allow_origin = "*".to_string();
     }
+    /// Sets cross origin request from defined source to acepted
     pub fn set_cross_origin_allow_host(&mut self, host: String) {
         self.access_control_allow_origin = host;
     }
+    /// Sets response content lenght
     pub fn set_content_length(&mut self, content_lenght: u64) {
         self.content_length = content_lenght;
     }
+    /// Sets response content type
     pub fn set_content_type(&mut self, content_type: String) {
         self.content_type = content_type;
     }
+    /// Obtains headers from data in the struct
     pub fn get_headers(&mut self) -> String {
         let mut headers: Vec<u8> = Vec::new();
         headers.extend_from_slice(&self.status.as_bytes());
@@ -146,6 +152,7 @@ impl ResponseHeaders {
 
 #[allow(dead_code)] // Remove unused code warnings on compile time
 #[derive(Debug)]
+/// Possible Transfer Encoding Values
 pub enum TransferEncoding {
     /// ""
     Undefined,
@@ -170,6 +177,7 @@ pub enum TransferEncoding {
 }
 
 impl Default for TransferEncoding {
+    /// Default Transfer Encoding Value
     fn default() -> TransferEncoding {
         TransferEncoding::Undefined
     }

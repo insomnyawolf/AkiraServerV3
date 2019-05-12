@@ -1,3 +1,4 @@
+/// Ansi colors that can be used to print in the stdout
 pub enum Color {
     Default,
     BlueDark,
@@ -7,6 +8,7 @@ pub enum Color {
 }
 
 impl Color {
+    /// Converts the given value to a String
     pub fn to_string(&self) -> &str {
         match *self {
             Color::Default => "0",
