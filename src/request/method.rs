@@ -1,6 +1,10 @@
 // https://tools.ietf.org/html/rfc2616#section-5.1.1
-/** Enum that contains references to possible request methods **/
+
 #[derive(Debug, PartialEq)]
+/** Contains references to all possible request methods
+    Can be parsed from string
+    Can be converted to string
+**/
 pub enum Method {
     CONNECT,
     DELETE,
@@ -14,13 +18,14 @@ pub enum Method {
 }
 
 impl Default for Method {
+    /// Defines default value for the method enum, wich is "Unsupported"
     fn default() -> Method {
         Method::Unsupported
     }
 }
 
 impl Method {
-    /** Parse Method from String **/
+    /// Parse Method from String
     pub fn from_str(s: &String) -> Option<Method> {
         let string: &str = &s[..];
         match string {
@@ -35,8 +40,7 @@ impl Method {
             _ => Some(Method::Unsupported),
         }
     }
-
-    /** Converts Method to string **/
+    /// Converts Method to string
     pub fn as_str(&self) -> &str {
         match *self {
             Method::CONNECT => "CONNECT",

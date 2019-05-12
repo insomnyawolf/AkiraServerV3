@@ -1,46 +1,54 @@
 use crate::request::utils::*;
 
 #[derive(Debug, Default)] // , PartialEq
+/// Struct that contains all data from request forms
 pub struct FormData {
+    /// Form Fields via multipartform & url encoded forms
     pub form_field: Vec<FormField>,
+    /// Files Uploaded via body on multipart forms
     pub multipart_file: Vec<MultipartFile>,
+    /// Error/non well formatted request falback
     pub other: Vec<String>,
 }
 
 impl FormData {
+    /// Adds FormField elemtents deom x-www-form-urlencoded to FormData
     pub fn add_url_encoded(&mut self, data: String) {
         let fields: Vec<&str> = data.rsplit("&").collect();
         for field in fields {
-            if field.contains("="){
+            if field.contains("=") {
                 let entry: Vec<&str> = field.split("=").collect();
-                self.form_field.push(FormField{
-                    name: percent_encoding::percent_decode(entry[0].as_bytes()).decode_utf8_lossy().to_string(),
-                    value:percent_encoding::percent_decode(entry[1].as_bytes()).decode_utf8_lossy().to_string(),
+                self.form_field.push(FormField {
+                    name: percent_encoding::percent_decode(entry[0].as_bytes())
+                        .decode_utf8_lossy()
+                        .to_string(),
+                    value: percent_encoding::percent_decode(entry[1].as_bytes())
+                        .decode_utf8_lossy()
+                        .to_string(),
                 });
             } else {
                 self.other.push(field.to_string());
             }
         }
     }
+    /// Adds Multipart elemtent to FormData
     pub fn add_multipart(&mut self, data: String, bounds: &String) {
-        let mut elements:Vec<&str> = data.split(bounds).collect();
+        let elements: Vec<&str> = data.split(bounds).collect();
         for mut element_str in elements {
             element_str = &element_str.trim_end_matches("\r\n--");
             if element_str != "\r\n" || element_str != "" {
                 let content_disposition = "Content-Disposition: form-data; ";
                 if element_str.contains(content_disposition) {
                     let element = MultipartFormElement::new(
-                        element_str.replace(content_disposition, "")
-                            .to_string(),
+                        element_str.replace(content_disposition, "").to_string(),
                     );
                     if element.is_file {
                         self.multipart_file.push(MultipartFile::new(element));
                     } else {
-                        self.form_field
-                            .push(FormField::new(element))
+                        self.form_field.push(FormField::new(element))
                     }
                 } else {
-                    if element_str != "--" && element_str != "--\r\n"{
+                    if element_str != "--" && element_str != "--\r\n" {
                         self.other.push(element_str.to_string());
                     }
                 }
@@ -50,14 +58,20 @@ impl FormData {
 }
 
 #[derive(Debug)]
+/// Structure that have the data of a Multipart File
 pub struct MultipartFile {
+    /// Field Id
     pub name: String,
+    /// Name of the uploaded file
     pub filename: String,
+    /// Kinf of file uploaded
     pub content_type: String,
+    /// File contents on bytes
     pub file: Vec<u8>,
 }
 
 impl MultipartFile {
+    /// Creates new MultipartFile Struct from MultipartFormElement
     pub fn new(element: MultipartFormElement) -> MultipartFile {
         MultipartFile {
             name: element.name,
@@ -69,12 +83,16 @@ impl MultipartFile {
 }
 
 #[derive(Debug)]
+/// Structure that have the data of a FormField
 pub struct FormField {
+    /// Field Id **/
     pub name: String,
+    /// Field Value **/
     pub value: String,
 }
 
 impl FormField {
+    /// Creates new FormField Struct from MultipartFormElement
     pub fn new(element: MultipartFormElement) -> FormField {
         FormField {
             name: element.name,
@@ -83,20 +101,21 @@ impl FormField {
     }
 }
 
-//ToDO Actually parse form fields
 #[derive(Debug, Default, PartialEq)]
+/// Structure that have each field in a MultiPartForm before processing them and splitting them on Files and Fields
 pub struct MultipartFormElement {
     //pub data: Vec<String>,
-    pub name: String,
-    pub content: String,
-    pub is_file: bool,
-    pub filename: String,
-    pub content_type: String,
-    pub file: Vec<u8>,
-    pub other: Vec<String>,
+    name: String,
+    content: String,
+    is_file: bool,
+    filename: String,
+    content_type: String,
+    file: Vec<u8>,
+    other: Vec<String>,
 }
 
 impl MultipartFormElement {
+    /// Creates new MultipartFormElement Struct from raw body content (String)
     pub fn new(raw: String) -> MultipartFormElement {
         let mut element = MultipartFormElement::default();
         //element.data = ;

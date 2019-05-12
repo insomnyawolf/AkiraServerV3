@@ -24,23 +24,27 @@ use threadpool::ThreadPool;
 use std::any::Any;
 use std::time::Duration;
 
+// Util
+mod utils;
+use crate::utils::colors::Color;
+
 // For Config
 mod settings;
+use crate::settings::settings::Settings;
 
 // Request Module
 mod request;
 
-use crate::request::request::Request;
 use crate::request::method::Method;
+use crate::request::request::Request;
+
+// Response
+mod response;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
-
-mod response;
-
-
 lazy_static! {
     #[derive(Debug)]
-    static ref APP_CONFIG: settings::Settings = settings::Settings::new_unwrap();
+    static ref APP_CONFIG: Settings = Settings::new().unwrap();
     static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder , "/".to_string());
 }
 
@@ -88,16 +92,13 @@ fn server() {
 fn handle_connection(mut stream: TcpStream) {
     // Create a Duration ans set is as timeout
     // That way the server doesnt keep waiting for more bytes
-    let timeout = Some(Duration::new(
-        APP_CONFIG.timeout.request_seconds,
-        APP_CONFIG.timeout.get_nanoseconds(),
-    ));
+    let timeout = Some(Duration::new(0, APP_CONFIG.timeout.get_nanoseconds()));
     // Get a copy of TcpStream
     //Parse request data
     let request = Request::parse(stream.try_clone().unwrap(), timeout);
 
     if request.is_valid_request {
-        log(&request);
+        log(&request, Color::Green);
 
         // Switch Equivalent
         match request.method {
@@ -109,7 +110,7 @@ fn handle_connection(mut stream: TcpStream) {
             }
         }
     } else {
-        log(&"Invalid Request");
+        log(&"Invalid Request", Color::Red);
     }
 
     // Avoid Dead Connections?
@@ -118,7 +119,7 @@ fn handle_connection(mut stream: TcpStream) {
 }
 
 fn handle_unsupported(mut stream: &TcpStream) {
-    log(&"Unsupported Method");
+    log(&"Unsupported Method", Color::Red);
     let mut headers = ResponseHeaders::new(HttpStatus::NotImplemented);
     stream.write(&headers.get_headers().as_bytes()).unwrap();
 }
@@ -138,7 +139,7 @@ fn handle_get(mut stream: &TcpStream, request: &Request) {
             headers.set_content_length(meta.len());
 
             if APP_CONFIG.debug.active {
-                log(&headers);
+                log(&headers, Color::Green);
             }
 
             stream.write(&headers.get_headers().as_bytes()).unwrap();
@@ -245,10 +246,15 @@ fn add_string(a: &String, b: String) -> String {
     a.to_string() + &b
 }
 
-fn log<T: Any + Debug>(data: &T) {
+fn log<T: Any + Debug>(data: &T, color: Color) {
+    // https://en.wikipedia.org/wiki/ANSI_escape_code
     if APP_CONFIG.debug.active {
         let s = format!(
-            "Debug:\t{time}\n\t{dat:?}\n",
+            "\x1b[{color1}mDebug:\t\x1b[{color2}m{time}\x1b[{color_custom}m\n\t{dat:?}\x1b[{default}m\n",
+            color1 = Color::BlueDark.to_string(),
+            color2 = Color::BlueLight.to_string(),
+            color_custom = color.to_string(),
+            default = Color::Default.to_string(),
             time = chrono::Local::now(),
             dat = data,
         );

@@ -1,63 +1,107 @@
 #[derive(Debug)]
-#[allow(dead_code)] // Remooves unused code warnings on compile time
+#[allow(dead_code)] // Removes unused code warnings on compile time
+/// Enum with most common HttpStatus Possible codes
 pub enum HttpStatus {
+    /// Dont use, Parse Fallback
     Undefined,
     // Informational 1xx
-    Continue,           // 100
-    SwitchingProtocols, // 101
+    /// 100
+    Continue,
+    /// 101
+    SwitchingProtocols,
     // Successful 2xx
-    OK,                          // 200
-    Created,                     // 201
-    Accepted,                    // 202
-    NonAuthoritativeInformation, // 203
-    NoContent,                   // 204
-    ResetContent,                // 205
-    PartialContent,              // 206
+    /// 200
+    OK,
+    /// 201
+    Created,
+    /// 202
+    Accepted,
+    /// 203
+    NonAuthoritativeInformation,
+    /// 204
+    NoContent,
+    /// 205
+    ResetContent,
+    /// 206
+    PartialContent,
     // Redirection 3xx
-    MultipleChoices,   // 300
-    MovedPermanently,  // 301
-    Found,             // 302
-    SeeOther,          // 303
-    NotModified,       // 304
-    UseProxy,          // 305
-    Unused306,         // 306 used in previous version, reserved, no longer used.
-    TemporaryRedirect, // 307
+    /// 300
+    MultipleChoices,
+    /// 301
+    MovedPermanently,
+    /// 302
+    Found,
+    /// 303
+    SeeOther,
+    /// 304
+    NotModified,
+    /// 305
+    UseProxy,
+    /// 306 used in previous version, reserved, no longer used.
+    Unused306,
+    /// 307
+    TemporaryRedirect,
     // Client Error 4xx
-    BadRequest,                   // 400
-    Unauthorized,                 // 401
-    PaymentRequired,              // 402
-    Forbidden,                    // 403
-    NotFound,                     // 404
-    MethodNotAllowed,             // 405
-    NotAcceptable,                // 406
-    ProxyAuthenticationRequired,  // 407
-    RequestTimeout,               // 408
-    Conflict,                     // 409
-    Gone,                         // 410
-    LengthRequired,               // 411
-    PreconditionFailed,           // 412
-    RequestEntityTooLarge,        // 413
-    RequestURITooLong,            // 414
-    UnsupportedMediaType,         // 415
-    RequestedRangeNotSatisfiable, // 416
-    ExpectationFailed,            // 417
+    /// 400
+    BadRequest,
+    /// 401
+    Unauthorized,
+    /// 402
+    PaymentRequired,
+    /// 403
+    Forbidden,
+    /// 404
+    NotFound,
+    /// 405
+    MethodNotAllowed,
+    /// 406
+    NotAcceptable,
+    /// 407
+    ProxyAuthenticationRequired,
+    /// 408
+    RequestTimeout,
+    /// 409
+    Conflict,
+    /// 410
+    Gone,
+    /// 411
+    LengthRequired,
+    /// 412
+    PreconditionFailed,
+    /// 413
+    RequestEntityTooLarge,
+    /// 414
+    RequestURITooLong,
+    /// 415
+    UnsupportedMediaType,
+    /// 416
+    RequestedRangeNotSatisfiable,
+    /// 417
+    ExpectationFailed,
     // Server Error 5xx
-    InternalServerError,     // 500
-    NotImplemented,          // 501
-    BadGateway,              // 502
-    ServiceUnavailable,      // 503
-    GatewayTimeout,          // 504
-    HTTPVersionNotSupported, // 505
+    /// 500
+    InternalServerError,
+    /// 501
+    NotImplemented,
+    /// 502
+    BadGateway,
+    /// 503
+    ServiceUnavailable,
+    /// 504
+    GatewayTimeout,
+    /// 505
+    HTTPVersionNotSupported,
 }
 
 impl Default for HttpStatus {
+    /// Default value for the enum
     fn default() -> HttpStatus {
         HttpStatus::Undefined
     }
 }
 
 impl HttpStatus {
-    /* ToDO Low Priority
+    /* ToDO Low Priority Parse HttpStatus From String
     pub fn from_str(s: &[u8]) -> Option<MediaType> {
         match s {
             b"HTTP/1.1 200 OK\r\n" => Some(HTTP_STATUS::OK),
@@ -66,6 +110,7 @@ impl HttpStatus {
     }
     */
 
+    /// Convert HttpStatus to bytes that can be sent with the response
     pub fn as_bytes(&self) -> &[u8] {
         match *self {
             HttpStatus::Undefined => b"",
@@ -116,12 +161,11 @@ impl HttpStatus {
             HttpStatus::ExpectationFailed => b"HTTP/1.1 417 EXPECTATION FAILED\r\n",
             // Server Error 5xx
             HttpStatus::InternalServerError => b"HTTP/1.1 500 INTERNAL SERVER ERROR\r\n",
-            HttpStatus::NotImplemented => b"HTTP/1.1 500 NOT IMPLEMENTED\r\n",
-            HttpStatus::BadGateway => b"HTTP/1.1 500 BAD GATEWAY\r\n",
-            HttpStatus::ServiceUnavailable => b"HTTP/1.1 500 SERVICE UNAVAILABLE\r\n",
-            HttpStatus::GatewayTimeout => b"HTTP/1.1 500 GATEWAY TIMEOUT\r\n",
-            HttpStatus::HTTPVersionNotSupported => b"HTTP/1.1 500 HTTP VERSION NOT SUPPORTED\r\n",
+            HttpStatus::NotImplemented => b"HTTP/1.1 501 NOT IMPLEMENTED\r\n",
+            HttpStatus::BadGateway => b"HTTP/1.1 502 BAD GATEWAY\r\n",
+            HttpStatus::ServiceUnavailable => b"HTTP/1.1 503 SERVICE UNAVAILABLE\r\n",
+            HttpStatus::GatewayTimeout => b"HTTP/1.1 504 GATEWAY TIMEOUT\r\n",
+            HttpStatus::HTTPVersionNotSupported => b"HTTP/1.1 505 HTTP VERSION NOT SUPPORTED\r\n",
         }
     }
 }
-

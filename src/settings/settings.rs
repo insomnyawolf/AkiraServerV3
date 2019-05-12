@@ -1,61 +1,25 @@
-// Config
+/// # Config Manager
 extern crate config;
 extern crate notify;
 extern crate serde;
 extern crate serde_derive;
 
-use std::sync::RwLock;
-
-use config::*;
-
-lazy_static! {
-    static ref SETTINGS: RwLock<Config> = RwLock::new({
-        let mut settings = Config::default();
-        settings
-            .merge(config::File::with_name("Settings.toml"))
-            .unwrap();
-
-        settings
-    });
-}
+use crate::settings::debug::*;
+use crate::settings::server::*;
+use crate::settings::timeouts::*;
 
 #[derive(Debug, Deserialize)]
-pub struct Server {
-    pub host: String,
-    pub port: String,
-    pub ttl: u32,
-    pub root_folder: String,
-    pub list_directories: bool,
-    pub workers_per_thread: usize,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Timeouts {
-    pub request_seconds: u64,
-    pub request_miliseconds: u32,
-}
-
-impl Timeouts {
-    pub fn get_nanoseconds(&self) -> u32 {
-        self.request_miliseconds * 1000000
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Debug {
-    pub active: bool,
-    pub log_to_console: bool,
-    pub log_to_file: bool,
-}
-
-#[derive(Debug, Deserialize)]
+/// Contains all the settings fragments
 pub struct Settings {
-    pub debug: Debug,
     pub server: Server,
     pub timeout: Timeouts,
+    pub debug: Debug,
 }
 
 impl Settings {
+    /// Load Config From The Specified File
+    ///
+    /// Currently ```"Settings.toml"```
     pub fn new() -> Result<Self, config::ConfigError> {
         let mut s = config::Config::new();
 
@@ -69,10 +33,7 @@ impl Settings {
         s.try_into()
     }
 
-    pub fn new_unwrap() -> Self {
-        Self::new().unwrap()
-    }
-
+    /// Prints Current Config to stdout
     pub fn show(&self) {
         println!("\n\x1b[31m{:?}\x1b[0m", self);
     }

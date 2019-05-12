@@ -9,6 +9,8 @@ use std::time::Duration;
 #[derive(Derivative)]
 #[derivative(Debug)]
 #[derive(Default)]
+/// This Struct Contains all the request data parsed and ready to use
+// ToDo UrlEncoded Variables
 pub struct Request {
     #[derivative(Debug = "ignore")]
     raw: String,
@@ -20,7 +22,7 @@ pub struct Request {
 }
 
 impl Request {
-    /** Parse request and headers from byte buffer **/
+    /// Parse request and headers from byte buffer
     pub fn parse(mut stream: TcpStream, timeout: Option<Duration>) -> Request {
         // Create Structure with default values
         let mut req = Request::default();
@@ -50,14 +52,13 @@ impl Request {
                 .unwrap()
                 .to_string();
 
-            let rs: Vec<&str> = request_arr[2].splitn(2,"\r\n\r\n").collect();
-
+            let rs: Vec<&str> = request_arr[2].splitn(2, "\r\n\r\n").collect();
             for part in rs {
                 if part.starts_with("HTTP") {
                     headers = RequestHeaders::parse(part);
                 } else if part.contains(&headers.content_bounds) && &headers.content_bounds != "" {
                     form_data.add_multipart(part.to_string(), &headers.content_bounds);
-                } else if part.contains("="){
+                } else if part.contains("=") {
                     form_data.add_url_encoded(part.to_string());
                 } else {
                     println!("Failed:\n{}\n", part);
@@ -70,12 +71,12 @@ impl Request {
         req
     }
 
-    /** Obtains resource path relative to the specified location **/
+    /// Obtains resource path relative to the specified location
     pub fn get_local_path(&self, root_folder: &String) -> String {
         root_folder.to_string() + &self.path
     }
 
-    /** Returns Raw String **/
+    /// Returns Raw String
     pub fn get_raw(&self) -> String {
         self.raw.to_string()
     }
