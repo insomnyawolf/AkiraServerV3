@@ -43,9 +43,8 @@ mod response;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
 lazy_static! {
-    #[derive(Debug)]
     static ref APP_CONFIG: Settings = Settings::new().unwrap();
-    static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder , "/".to_string());
+    static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder, "/".to_string());
 }
 
 // Resources

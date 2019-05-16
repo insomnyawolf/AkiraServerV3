@@ -41,8 +41,6 @@ impl Request {
             .to_string()
             .replace('\u{0}', "");
 
-        //println!("{}\n", req.raw);
-
         let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
 
         if request_arr.len() >= 3 {
@@ -61,7 +59,9 @@ impl Request {
                 } else if part.contains("=") {
                     form_data.add_url_encoded(part.to_string());
                 } else {
-                    println!("Failed:\n{}\n", part);
+                    if part != "" {
+                        println!("Failed to parse:\n{}\n", part);
+                    }
                 }
             }
             req.request_headers = headers;
