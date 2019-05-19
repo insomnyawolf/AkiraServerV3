@@ -5,13 +5,13 @@
 ### Windows
 [GNU vs MSVC](https://www.reddit.com/r/rust/comments/a63dlt/difference_between_the_gnu_and_msvc_toolchains/)
 #### GNU
-`cargo rustc --release --target=i686-pc-windows-gnu -- -C linker=i686-w64-mingw32-gcc`
+`cargo rustc --release --target=i686-pc-windows-gnu -- -C linker=i686-w64-mingw32-gcc`  
 `cargo rustc --release --target=x86_64-pc-windows-gnu -- -C linker=x86_64-w64-mingw32-gcc`
 #### MSVC
-`cargo rustc --release --target=i686-pc-windows-msvc`
+`cargo rustc --release --target=i686-pc-windows-msvc`  
 `cargo rustc --release --target=x86_64-pc-windows-msvc`
 ### Linux
-`cargo rustc --release --target=i686-unknown-linux-gnu`
+`cargo rustc --release --target=i686-unknown-linux-gnu`  
 `cargo rustc --release --target=x86_64-unknown-linux-gnu `
 ### Android
 `cargo rustc --release --target=armv7-linux-androideabi`
