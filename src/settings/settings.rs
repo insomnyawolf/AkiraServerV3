@@ -8,6 +8,9 @@ use crate::settings::debug::*;
 use crate::settings::server::*;
 use crate::settings::timeouts::*;
 
+use crate::utils;
+use termcolor::Color;
+
 #[derive(Debug, Deserialize)]
 /// Contains all the settings fragments
 pub struct Settings {
@@ -35,7 +38,7 @@ impl Settings {
 
     /// Prints Current Config to stdout
     pub fn show(&self) {
-        println!("\n\x1b[31m{:?}\x1b[0m", self);
+        utils::log::log(self, Color::Magenta, true, true, true);
     }
 
     // ToDo funciona con la implementacion actual, WIP

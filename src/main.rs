@@ -26,7 +26,6 @@ use std::time::Duration;
 
 // Util
 mod utils;
-use crate::utils::colors::Color;
 
 // For Config
 mod settings;
@@ -42,6 +41,7 @@ use crate::request::request::Request;
 mod response;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
+use termcolor::Color;
 lazy_static! {
     static ref APP_CONFIG: Settings = Settings::new().unwrap();
     static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder, "/".to_string());
@@ -248,20 +248,12 @@ fn add_string(a: &String, b: String) -> String {
 fn log<T: Any + Debug>(data: &T, color: Color) {
     // https://en.wikipedia.org/wiki/ANSI_escape_code
     if APP_CONFIG.debug.active {
-        let s = format!(
-            "\x1b[{color1}mDebug:\t\x1b[{color2}m{time}\x1b[{color_custom}m\n\t{dat:?}\x1b[{default}m\n",
-            color1 = Color::BlueDark.to_string(),
-            color2 = Color::BlueLight.to_string(),
-            color_custom = color.to_string(),
-            default = Color::Default.to_string(),
-            time = chrono::Local::now(),
-            dat = data,
+        utils::log::log(
+            data,
+            color,
+            true,
+            APP_CONFIG.debug.log_to_console,
+            APP_CONFIG.debug.log_to_file,
         );
-        if APP_CONFIG.debug.log_to_file {
-            // ToDo
-        }
-        if APP_CONFIG.debug.log_to_console {
-            println!("{}", s);
-        }
     }
 }

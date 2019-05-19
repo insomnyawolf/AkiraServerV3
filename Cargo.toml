@@ -27,6 +27,7 @@ percent-encoding = "*"
 #debug
 chrono = "*"
 derivative = "*"
+termcolor = "*"
 
 [profile.dev]
 opt-level = 0      # controls the `--opt-level` the compiler builds with.
