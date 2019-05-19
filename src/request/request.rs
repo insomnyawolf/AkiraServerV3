@@ -2,6 +2,7 @@ use crate::request::form::*;
 use crate::request::headers::*;
 use crate::request::method::*;
 
+use crate::request::other::Other;
 use std::io::Read;
 use std::net::TcpStream;
 use std::time::Duration;
@@ -19,6 +20,7 @@ pub struct Request {
     pub path: String,
     pub request_headers: RequestHeaders,
     pub form_data: FormData,
+    pub other: Other,
 }
 
 impl Request {
@@ -68,6 +70,7 @@ impl Request {
             req.form_data = form_data;
             req.is_valid_request = true;
         }
+        req.other = Other::parse(stream);
         req
     }
 
