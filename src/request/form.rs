@@ -64,7 +64,7 @@ pub struct MultipartFile {
     pub name: String,
     /// Name of the uploaded file
     pub filename: String,
-    /// Kinf of file uploaded
+    /// Kind of file uploaded
     pub content_type: String,
     /// File contents on bytes
     pub file: Vec<u8>,

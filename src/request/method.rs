@@ -26,18 +26,18 @@ impl Default for Method {
 
 impl Method {
     /// Parse Method from String
-    pub fn from_str(s: &String) -> Option<Method> {
+    pub fn from_str(s: &String) -> Method {
         let string: &str = &s[..];
         match string {
-            "CONNECT" => Some(Method::CONNECT),
-            "DELETE" => Some(Method::DELETE),
-            "GET" => Some(Method::GET),
-            "HEAD" => Some(Method::HEAD),
-            "OPTIONS" => Some(Method::OPTIONS),
-            "POST" => Some(Method::POST),
-            "PUT" => Some(Method::PUT),
-            "TRACE" => Some(Method::TRACE),
-            _ => Some(Method::Unsupported),
+            "CONNECT" => Method::CONNECT,
+            "DELETE" => Method::DELETE,
+            "GET" => Method::GET,
+            "HEAD" => Method::HEAD,
+            "OPTIONS" => Method::OPTIONS,
+            "POST" => Method::POST,
+            "PUT" => Method::PUT,
+            "TRACE" => Method::TRACE,
+            _ => Method::Unsupported,
         }
     }
     ///  Converts the given value to a String

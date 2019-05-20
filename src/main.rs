@@ -252,8 +252,7 @@ fn read_dir(request: &Request) -> String {
                             "Directories"
                         }
                         @for uri in &directories {
-                            a href=(percent_encode(uri, true)) { (uri) }
-                            br{}
+                            a href=(percent_encode(uri, true)) style="display:block;" { (uri) }
                         }
                     }
                     br{}
@@ -262,8 +261,7 @@ fn read_dir(request: &Request) -> String {
                             "Files"
                         }
                         @for uri in &files {
-                            a href=(percent_encode(uri, false)) { (uri) }
-                            br{}
+                            a href=(percent_encode(uri, false)) style="display:block;" { (uri) }
                         }
                     }
                 }

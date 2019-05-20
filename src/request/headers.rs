@@ -66,7 +66,7 @@ pub struct RequestHeaders {
     /// user agent string **/
     pub user_agent: String,
 
-    // ToDo Omited Upgrade
+    // ToDo Omitted Upgrade
     /// Informs the server of proxies through which the request was sent
     pub via: String,
     /// A general warning about possible problems with the entity body

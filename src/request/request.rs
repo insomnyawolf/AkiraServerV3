@@ -15,6 +15,7 @@ use std::time::Duration;
 pub struct Request {
     #[derivative(Debug = "ignore")]
     raw: String,
+    #[derivative(Debug = "ignore")]
     pub is_valid_request: bool,
     pub method: Method,
     pub path: String,
