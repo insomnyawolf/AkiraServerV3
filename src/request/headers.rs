@@ -153,7 +153,7 @@ impl RequestHeaders {
                             headers.content_type.trim_end_matches(&bounds).to_string();
                         headers.content_type = headers
                             .content_type
-                            .trim_end_matches("; boundary=--")
+                            .trim_end_matches("; boundary=")
                             .to_string();
                         headers.content_bounds = bounds;
                     }

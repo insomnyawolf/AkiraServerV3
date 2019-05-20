@@ -13,6 +13,7 @@ readme = "..."
 threadpool = "*"
 num_cpus = "*"
 bytes = "*"
+maud = "*"
 
 #Config Files
 config = "*"

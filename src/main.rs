@@ -1,3 +1,4 @@
+#![feature(proc_macro_hygiene)]  // Enables procedural macros as expresions
 // Url
 extern crate percent_encoding;
 // Time
@@ -11,6 +12,8 @@ extern crate serde_derive;
 extern crate lazy_static;
 #[macro_use]
 extern crate derivative;
+extern crate maud;
+use maud::*;
 
 use std::fmt::Debug;
 use std::fs;
@@ -42,15 +45,14 @@ mod response;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
 use termcolor::Color;
+
+// Resources
+const STYLE_CSS:&'static str = include_str!("../resources/bootstrap.min.css");
+
 lazy_static! {
     static ref APP_CONFIG: Settings = Settings::new().unwrap();
     static ref SERVER_ROOT: String = add_string(&APP_CONFIG.server.root_folder, "/".to_string());
 }
-
-// Resources
-static HTML_HEADER: &[u8] = include_bytes!("../resources/html_header.html");
-static HTML_CLOSE: &[u8] = include_bytes!("../resources/html_close.html");
-static HTML_ERROR_PAGE: &[u8] = include_bytes!("../resources/404.html");
 
 fn main() {
     APP_CONFIG.show();
@@ -149,40 +151,66 @@ fn handle_get(mut stream: &TcpStream, request: &Request) {
             if APP_CONFIG.server.list_directories {
                 let mut headers = ResponseHeaders::new(HttpStatus::OK);
                 stream.write(headers.get_headers().as_bytes()).unwrap();
-                stream.write(HTML_HEADER).unwrap();
                 stream.write(read_dir(&request).as_bytes()).unwrap();
-                stream.write(HTML_CLOSE).unwrap();
             } else {
                 let mut headers = ResponseHeaders::new(HttpStatus::Forbidden);
                 stream.write(headers.get_headers().as_bytes()).unwrap();
-                stream.write(HTML_HEADER).unwrap();
-                stream.write(HTML_ERROR_PAGE).unwrap();
-                stream.write(HTML_CLOSE).unwrap();
+                stream.write(error_page(HttpStatus::Forbidden).as_bytes()).unwrap();
             }
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
         stream.write(headers.get_headers().as_bytes()).unwrap();
-        stream.write(HTML_HEADER).unwrap();
-        stream.write(HTML_ERROR_PAGE).unwrap();
-        stream.write(HTML_CLOSE).unwrap();
+        stream.write(error_page(HttpStatus::NotFound).as_bytes()).unwrap();
     }
+}
+
+fn header_template() -> Markup {
+    html!{
+        head{
+            meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"{}
+            meta http-equiv="X-UA-Compatible" content="ie=edge"{}
+            meta charset="UTF-8" {}
+            title{
+                "AkiraServerV3!"
+            }
+            style{
+                (STYLE_CSS)
+            }
+        }
+    }
+}
+
+fn error_page(error_code:HttpStatus) -> String {
+    let template:Markup = html!{
+        html{
+            (header_template())
+            body{
+                div class="container"{
+                    // Todo Fix this alert
+                    div class="alert alert-primary" role="alert" {
+                        h3{
+                            "Oops! the request can not be processed"
+                            br{}
+                            "Error: "(error_code.to_int())
+                        }
+                        a href="/" class="btn btn-primary"{
+                            "Safe Place!!!"
+                        }
+                    }
+                }
+            }
+        }
+    };
+    template.into_string()
 }
 
 // ToDo Test Bytes instead of strings for better performance
 fn read_dir(request: &Request) -> String {
-    let mut result = String::new();
-
-    result = add_string(&result, format!("<h1>Listing:{}</h1><br />", &request.path));
 
     let request_path = request.get_local_path(&APP_CONFIG.server.root_folder);
 
-    if request_path.as_bytes() != SERVER_ROOT.as_bytes() {
-        result = add_string(
-            &result,
-            "<a href=\"..\">Upper Directory</a><br />".to_string(),
-        );
-    }
+
 
     let paths = fs::read_dir(&request_path).unwrap();
 
@@ -193,48 +221,59 @@ fn read_dir(request: &Request) -> String {
         let path = item_info.unwrap().path().display().to_string();
         let md = fs::metadata(&path).unwrap();
         if md.is_dir() {
-            directories.push(path);
+            directories.push(get_web_path(path, &request_path));
         } else if md.is_file() {
-            files.push(path);
+            files.push(get_web_path(path, &request_path));
         }
     }
 
-    if directories.len() > 0 {
-        result = add_string(&result, "<h2>Directories</h2><br />".to_string());
-    }
+    let dir_len = directories.len();
+    let file_len = files.len();
 
-    for path in directories {
-        let link = get_web_path(path, &request_path);
-        result = add_string(
-            &result,
-            format!(
-                "<a href=\"{1}/\">{0}</a><br />",
-                link,
-                percent_encoding::utf8_percent_encode(&link, percent_encoding::DEFAULT_ENCODE_SET)
-            ),
-        );
-    }
-
-    if files.len() > 0 {
-        result = add_string(&result, "<h2>Files</h2><br />".to_string());
-    }
-
-    for path in files {
-        let link = get_web_path(path, &request_path);
-        result = add_string(
-            &result,
-            format!("<a href=\"{1}\">{0}</a><br />", link, percent_encode(&link)),
-        );
-    }
-    result
+    let template:Markup = html! {
+        html{
+            (header_template())
+            body{
+                div class="container"{
+                    h1{
+                        "Listing:"(&request.path)
+                    }
+                    @if (request_path.as_bytes()) != (SERVER_ROOT.as_bytes()) {
+                        a href=".." class="btn btn-primary" { "Upper Directory" }
+                        br{}
+                    }
+                    @if dir_len > 0 {
+                        h3{ "Directories" }
+                        @for uri in &directories {
+                            a href=(percent_encode(uri, true)) { (uri) }
+                            br{}
+                        }
+                    }
+                    @if file_len > 0 {
+                        h3{ "Files" }
+                        @for uri in &files {
+                            a href=(percent_encode(uri, false)) { (uri) }
+                            br{}
+                        }
+                    }
+                }
+            }
+        }
+    };
+    template.into_string()
 }
 
-fn percent_encode(link: &String) -> String {
-    percent_encoding::utf8_percent_encode(
+fn percent_encode(link: &String, is_dir:bool) -> String {
+    let encoded = percent_encoding::utf8_percent_encode(
         &link.replace('%', "%25"),
         percent_encoding::DEFAULT_ENCODE_SET,
     )
-    .to_string()
+    .to_string();
+    if is_dir {
+        encoded+"\\"
+    } else {
+        encoded
+    }
 }
 
 fn get_web_path(full_path: String, path: &String) -> String {

@@ -168,4 +168,63 @@ impl HttpStatus {
             HttpStatus::HTTPVersionNotSupported => b"HTTP/1.1 505 HTTP VERSION NOT SUPPORTED\r\n",
         }
     }
+
+    /// Convert HttpStatus to bytes that can be sent with the response
+    pub fn to_int(&self) -> i32 {
+        match *self {
+            HttpStatus::Undefined => -1,
+            // Informational 1xx
+            HttpStatus::Continue => 100,
+            HttpStatus::SwitchingProtocols => 101,
+            // Successful 2xx
+            HttpStatus::OK => 200,
+            HttpStatus::Created => 201,
+            HttpStatus::Accepted => 202,
+            HttpStatus::NonAuthoritativeInformation => {
+                203
+            }
+            HttpStatus::NoContent => 204,
+            HttpStatus::ResetContent => 205,
+            HttpStatus::PartialContent => 206,
+            // Redirection 3xx
+            HttpStatus::MultipleChoices => 300,
+            HttpStatus::MovedPermanently => 301,
+            HttpStatus::Found => 302,
+            HttpStatus::SeeOther => 303,
+            HttpStatus::NotModified => 304,
+            HttpStatus::UseProxy => 305,
+            HttpStatus::Unused306 => 306,
+            HttpStatus::TemporaryRedirect => 307,
+            // Client Error 4xx
+            HttpStatus::BadRequest => 400,
+            HttpStatus::Unauthorized => 401,
+            HttpStatus::PaymentRequired => 402,
+            HttpStatus::Forbidden => 403,
+            HttpStatus::NotFound => 404,
+            HttpStatus::MethodNotAllowed => 405,
+            HttpStatus::NotAcceptable => 406,
+            HttpStatus::ProxyAuthenticationRequired => {
+                407
+            }
+            HttpStatus::RequestTimeout => 408,
+            HttpStatus::Conflict => 409,
+            HttpStatus::Gone => 410,
+            HttpStatus::LengthRequired => 411,
+            HttpStatus::PreconditionFailed => 412,
+            HttpStatus::RequestEntityTooLarge => 413,
+            HttpStatus::RequestURITooLong => 414,
+            HttpStatus::UnsupportedMediaType => 415,
+            HttpStatus::RequestedRangeNotSatisfiable => {
+                416
+            }
+            HttpStatus::ExpectationFailed => 417,
+            // Server Error 5xx
+            HttpStatus::InternalServerError => 500,
+            HttpStatus::NotImplemented => 501,
+            HttpStatus::BadGateway => 502,
+            HttpStatus::ServiceUnavailable => 503,
+            HttpStatus::GatewayTimeout => 504,
+            HttpStatus::HTTPVersionNotSupported => 505,
+        }
+    }
 }
