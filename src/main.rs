@@ -47,7 +47,8 @@ use crate::response::status::HttpStatus;
 use termcolor::Color;
 
 // Resources
-const STYLE_CSS:&'static str = include_str!("../resources/bootstrap.min.css");
+const BOOTSTRAP_CSS:&'static str = include_str!("../resources/bootstrap.css");
+// const JQUERY_JS:&'static str = include_str!("../resources/jquery-3.4.1.js");
 
 lazy_static! {
     static ref APP_CONFIG: Settings = Settings::new().unwrap();
@@ -99,7 +100,7 @@ fn handle_connection(mut stream: TcpStream) {
     let request = Request::parse(stream.try_clone().unwrap(), timeout);
 
     if request.is_valid_request {
-        log(&request, Color::Green);
+        log(&request, Color::Cyan);
 
         // Switch Equivalent
         match request.method {
@@ -140,7 +141,7 @@ fn handle_get(mut stream: &TcpStream, request: &Request) {
             headers.set_content_length(meta.len());
 
             if APP_CONFIG.debug.active {
-                log(&headers, Color::Green);
+                log(&headers, Color::Cyan);
             }
 
             stream.write(&headers.get_headers().as_bytes()).unwrap();
@@ -175,8 +176,13 @@ fn header_template() -> Markup {
                 "AkiraServerV3!"
             }
             style{
-                (STYLE_CSS)
+                (PreEscaped(BOOTSTRAP_CSS))
             }
+            /*
+            script {
+                (PreEscaped(JQUERY_JS))
+            }
+            */
         }
     }
 }
@@ -188,7 +194,7 @@ fn error_page(error_code:HttpStatus) -> String {
             body{
                 div class="container"{
                     // Todo Fix this alert
-                    div class="alert alert-primary" role="alert" {
+                    div class="alert alert-danger" role="alert" {
                         h3{
                             "Oops! the request can not be processed"
                             br{}
@@ -240,17 +246,21 @@ fn read_dir(request: &Request) -> String {
                     }
                     @if (request_path.as_bytes()) != (SERVER_ROOT.as_bytes()) {
                         a href=".." class="btn btn-primary" { "Upper Directory" }
-                        br{}
                     }
                     @if dir_len > 0 {
-                        h3{ "Directories" }
+                        h3 {
+                            "Directories"
+                        }
                         @for uri in &directories {
                             a href=(percent_encode(uri, true)) { (uri) }
                             br{}
                         }
                     }
+                    br{}
                     @if file_len > 0 {
-                        h3{ "Files" }
+                        h3 {
+                            "Files"
+                        }
                         @for uri in &files {
                             a href=(percent_encode(uri, false)) { (uri) }
                             br{}

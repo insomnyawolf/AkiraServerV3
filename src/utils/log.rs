@@ -17,7 +17,7 @@ pub fn log<T: Any + Debug>(data: &T, color: Color, intense: bool, to_console: bo
         colored_stdout
             .set_color(
                 ColorSpec::new()
-                    .set_fg(Some(Color::Cyan))
+                    .set_fg(Some(Color::Green))
                     .set_intense(intense),
             )
             .unwrap();
