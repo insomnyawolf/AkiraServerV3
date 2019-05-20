@@ -47,7 +47,7 @@ impl Request {
         let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
 
         if request_arr.len() >= 3 {
-            req.method = Method::from_str(&request_arr[0].to_string()).unwrap();
+            req.method = Method::from_str(&request_arr[0].to_string());
             req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
                 .decode_utf8()
                 .unwrap()
