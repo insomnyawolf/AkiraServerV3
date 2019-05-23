@@ -139,12 +139,14 @@ fn handle_get(mut stream: &TcpStream, request: &Request) {
             let mut headers = ResponseHeaders::new(HttpStatus::OK);
             headers.set_cross_origin_allow_all();
             headers.set_content_length(meta.len());
+            let headers_processed = headers.get_headers();
 
             if APP_CONFIG.debug.active {
                 log(&headers, Color::Cyan);
+                log(&headers_processed, Color::Cyan);
             }
 
-            stream.write(&headers.get_headers().as_bytes()).unwrap();
+            stream.write(headers_processed.as_bytes()).unwrap();
 
             file.read_to_end(&mut data).unwrap();
             stream.write(data.as_slice()).unwrap();

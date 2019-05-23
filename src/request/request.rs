@@ -44,6 +44,8 @@ impl Request {
             .to_string()
             .replace('\u{0}', "");
 
+        //println!("{}", &req.raw);
+
         let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
 
         if request_arr.len() >= 3 {
