@@ -4,9 +4,11 @@
 use crate::response::status::*;
 
 // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+
+// ToDo Complete code for all fields
+
 #[derive(Debug, Default)]
 /// Structure That can be used to easily add response headers to any http response
-// ToDo Complete code for all fields
 pub struct ResponseHeaders {
     /// Status Header
     pub status: HttpStatus,
