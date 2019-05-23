@@ -1,4 +1,8 @@
+// Template System
 extern crate maud;
+// Mime
+extern crate mime_guess;
+
 use maud::*;
 use std::fs;
 use std::fs::File;
@@ -9,7 +13,7 @@ use std::net::TcpStream;
 use crate::request::request::Request;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
-use crate::utils::log::log;
+use crate::utils::log::{log, log_error};
 use crate::APP_CONFIG;
 use termcolor::Color;
 
@@ -18,8 +22,9 @@ const BOOTSTRAP_CSS: &'static str = include_str!("../../resources/bootstrap.css"
 // const JQUERY_JS:&'static str = include_str!("../resources/jquery-3.4.1.js");
 
 pub fn handle_get(mut stream: &TcpStream, request: &Request) {
-    let path = request.get_local_path(&APP_CONFIG.server.root_folder);
-    if std::path::Path::new(&path).exists() {
+    let path_str = request.get_local_path(&APP_CONFIG.server.root_folder);
+    let path = std::path::Path::new(&path_str);
+    if path.exists() {
         let meta = fs::metadata(&path).unwrap();
         if meta.is_file() {
             // TODO Optimize this, hend filetipe headers and load file in chunks
@@ -30,6 +35,16 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
             let mut headers = ResponseHeaders::new(HttpStatus::OK);
             headers.set_cross_origin_allow_all();
             headers.set_content_length(meta.len());
+            // https://docs.rs/mime_guess/2.0.0-alpha.6/mime_guess/fn.octet_stream.html
+            let mime = mime_guess::guess_mime_type_opt(path);
+            match mime {
+                Some(value) => {
+                    headers.set_content_type(value.to_string());
+                }
+                None => {
+                    log_error(&"No mime found", Color::Yellow);
+                }
+            };
             let headers_processed = headers.get_headers();
 
             if APP_CONFIG.debug.active {

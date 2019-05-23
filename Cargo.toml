@@ -30,6 +30,9 @@ chrono = "*"
 derivative = "*"
 termcolor = "*"
 
+# Mime
+mime_guess = "*"
+
 [profile.dev]
 opt-level = 0      # controls the `--opt-level` the compiler builds with.
                    # 0-1 is good for debugging. 2 is well-optimized. Max is 3.

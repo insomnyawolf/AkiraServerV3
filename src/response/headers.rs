@@ -147,6 +147,11 @@ impl ResponseHeaders {
             let s = format!("Content-Length: {}\r\n", &self.content_length);
             headers.extend_from_slice(s.as_bytes());
         }
+        // Content Type
+        if self.content_type != "" {
+            let s = format!("Content-Type: {}\r\n", &self.content_type);
+            headers.extend_from_slice(s.as_bytes());
+        }
         headers.extend_from_slice(b"\r\n");
         String::from_utf8_lossy(headers.as_slice()).to_string()
     }
