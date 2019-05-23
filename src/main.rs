@@ -28,7 +28,7 @@ use crate::request_handlers::get_handler::handle_get;
 
 // Util
 mod utils;
-use crate::utils::log::log;
+use crate::utils::log::*;
 
 // For Config
 mod settings;
@@ -69,12 +69,18 @@ fn server() {
     // Inicia piscina de trabajos limitada
     let pool = ThreadPool::new(n_workers);
     // Bind de la direccion tcp
-    let listener = TcpListener::bind(format!(
+    let listener_option = TcpListener::bind(format!(
         "{host}:{port}",
         host = APP_CONFIG.server.host,
         port = APP_CONFIG.server.port
-    ))
-    .unwrap();
+    ));
+    let listener = match listener_option {
+        Ok(value) => (value),
+        Err(error) => {
+            log_error_fatal(&error);
+            panic!();
+        }
+    };
 
     listener
         .set_ttl(APP_CONFIG.server.ttl)
