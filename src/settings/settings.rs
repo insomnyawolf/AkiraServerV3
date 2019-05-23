@@ -1,6 +1,6 @@
 /// # Config Manager
 extern crate config;
-extern crate notify;
+// extern crate notify;
 extern crate serde;
 extern crate serde_derive;
 
@@ -9,6 +9,7 @@ use crate::settings::server::*;
 use crate::settings::timeouts::*;
 
 use crate::utils;
+use std::result::Result;
 use termcolor::Color;
 
 #[derive(Debug, Deserialize)]
@@ -38,7 +39,7 @@ impl Settings {
 
     /// Prints Current Config to stdout
     pub fn show(&self) {
-        utils::log::log(self, Color::Magenta, true, true, true);
+        utils::log::log(self, Color::Magenta);
     }
 
     // ToDo funciona con la implementacion actual, WIP
