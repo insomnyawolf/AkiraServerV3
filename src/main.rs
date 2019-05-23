@@ -1,10 +1,7 @@
 #![feature(proc_macro_hygiene)] // Enables procedural macros as expresions
                                 // Url
 extern crate percent_encoding;
-// Time
-extern crate chrono;
-// Config
-extern crate config;
+
 // Parser
 #[macro_use]
 extern crate serde_derive;
@@ -12,7 +9,6 @@ extern crate serde_derive;
 extern crate lazy_static;
 #[macro_use]
 extern crate derivative;
-extern crate maud;
 
 use std::io::prelude::*;
 use std::net::{Shutdown, TcpListener, TcpStream};

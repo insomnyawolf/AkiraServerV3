@@ -1,4 +1,5 @@
 /// # Config Manager
+// Config
 extern crate config;
 // extern crate notify;
 extern crate serde;
