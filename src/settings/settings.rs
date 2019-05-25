@@ -15,13 +15,13 @@ use termcolor::Color;
 
 #[derive(Debug, Deserialize)]
 /// Contains all the settings fragments
-pub struct Settings {
+pub struct Config {
     pub server: Server,
     pub timeout: Timeouts,
     pub debug: Debug,
 }
 
-impl Settings {
+impl Config {
     /// Load Config From The Specified File
     ///
     /// Currently ```"Settings.toml"```

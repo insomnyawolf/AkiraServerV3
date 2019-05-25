@@ -29,7 +29,7 @@ use crate::utils::log::*;
 
 // For Config
 mod settings;
-use crate::settings::settings::Settings;
+use crate::settings::settings::Config;
 
 // Request Module
 mod request;
@@ -41,21 +41,19 @@ use crate::request::request::Request;
 mod response;
 
 lazy_static! {
-    pub static ref APP_CONFIG: Settings = load_settings();
+    pub static ref APP_CONFIG: Config = load_settings();
 }
 
-fn load_settings() -> Settings {
-    let mut settings: Settings;
-    match Settings::new() {
-        Ok(value) => {
-            settings = value;
+fn load_settings() -> Config {
+    match Config::new() {
+        Ok(mut value) => {
+            value.server.root_folder = add_string(&value.server.root_folder, "/".to_string());
+            value
         }
         Err(error) => {
             panic!("{}", error);
         }
     }
-    settings.server.root_folder = add_string(&settings.server.root_folder, "/".to_string());
-    settings
 }
 
 fn main() {
