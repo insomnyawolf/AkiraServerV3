@@ -1,6 +1,6 @@
 // Time
 extern crate chrono;
-
+use crate::utils::check_console_write;
 use crate::APP_CONFIG;
 use core::any::Any;
 use std::fmt::Debug;
@@ -12,29 +12,29 @@ fn do_log_debug<T: Any + Debug>(tag: &str, data: &T, color: Color, intense: bool
     if APP_CONFIG.debug.active {
         if APP_CONFIG.debug.log_to_console {
             let mut colored_stdout: StandardStream = StandardStream::stdout(ColorChoice::Always);
-            colored_stdout
-                .set_color(
+            check_console_write(
+                colored_stdout.set_color(
                     ColorSpec::new()
                         .set_fg(Some(Color::Blue))
                         .set_intense(intense),
-                )
-                .unwrap();
-            write!(&mut colored_stdout, "{}\t", tag).unwrap();
-            colored_stdout
-                .set_color(
+                ),
+            );
+            check_console_write(write!(&mut colored_stdout, "{}\t", tag));
+            check_console_write(
+                colored_stdout.set_color(
                     ColorSpec::new()
                         .set_fg(Some(Color::Green))
                         .set_intense(intense),
-                )
-                .unwrap();
-            writeln!(&mut colored_stdout, "{}", chrono::Local::now()).unwrap();
-            colored_stdout
-                .set_color(ColorSpec::new().set_fg(Some(color)).set_intense(intense))
-                .unwrap();
-            writeln!(&mut colored_stdout, "{:#?}", data).unwrap();
-            colored_stdout
-                .set_color(ColorSpec::new().set_fg(Some(Color::White)))
-                .unwrap();
+                ),
+            );
+            check_console_write(writeln!(&mut colored_stdout, "{}", chrono::Local::now()));
+            check_console_write(
+                colored_stdout.set_color(ColorSpec::new().set_fg(Some(color)).set_intense(intense)),
+            );
+            check_console_write(writeln!(&mut colored_stdout, "{:#?}", data));
+            check_console_write(
+                colored_stdout.set_color(ColorSpec::new().set_fg(Some(Color::White))),
+            );
         }
         if APP_CONFIG.debug.log_to_file {
             // Todo

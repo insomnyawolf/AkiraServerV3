@@ -1,3 +1,5 @@
+use crate::utils::log::log_warning;
+
 /// Check if the string estarts with the defined pattern
 /// If starts with the pattern, removes the pattern and stores the remeaning data to the field
 /// as `` String ``
@@ -29,7 +31,13 @@ pub fn generate_field_string_vec(field: &mut Vec<String>, data: &str, pattern: &
 /// as `` u64 ``
 pub fn generate_field_u64(field: &mut u64, data: &str, pattern: &str) -> bool {
     if data.to_lowercase().starts_with(&pattern.to_lowercase()[..]) {
-        *field = data[pattern.len()..].parse::<u64>().unwrap();
+        *field = match data[pattern.len()..].parse::<u64>() {
+            Ok(value) => value,
+            Err(err) => {
+                log_warning(&err);
+                0
+            }
+        };
         return true;
     }
     false

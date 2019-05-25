@@ -11,9 +11,9 @@ use std::io::Write;
 use std::net::TcpStream;
 
 use crate::request::request::Request;
-use crate::request_handlers::check_write;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
+use crate::utils::check_stream_write;
 use crate::utils::log::*;
 use crate::APP_CONFIG;
 
@@ -52,25 +52,25 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
                 log_verbose(&headers_processed);
             }
 
-            check_write(stream.write(headers_processed.as_bytes()));
+            check_stream_write(stream.write(headers_processed.as_bytes()));
 
             file.read_to_end(&mut data).unwrap();
-            check_write(stream.write(data.as_slice()));
+            check_stream_write(stream.write(data.as_slice()));
         } else if meta.is_dir() {
             if APP_CONFIG.server.list_directories {
                 let mut headers = ResponseHeaders::new(HttpStatus::OK);
-                check_write(stream.write(headers.get_headers().as_bytes()));
-                check_write(stream.write(read_dir(&request).as_bytes()));
+                check_stream_write(stream.write(headers.get_headers().as_bytes()));
+                check_stream_write(stream.write(read_dir(&request).as_bytes()));
             } else {
                 let mut headers = ResponseHeaders::new(HttpStatus::Forbidden);
-                check_write(stream.write(headers.get_headers().as_bytes()));
-                check_write(stream.write(error_page(HttpStatus::Forbidden).as_bytes()));
+                check_stream_write(stream.write(headers.get_headers().as_bytes()));
+                check_stream_write(stream.write(error_page(HttpStatus::Forbidden).as_bytes()));
             }
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
-        check_write(stream.write(headers.get_headers().as_bytes()));
-        check_write(stream.write(error_page(HttpStatus::NotFound).as_bytes()));
+        check_stream_write(stream.write(headers.get_headers().as_bytes()));
+        check_stream_write(stream.write(error_page(HttpStatus::NotFound).as_bytes()));
     }
 }
 

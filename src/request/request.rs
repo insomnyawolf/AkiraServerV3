@@ -3,6 +3,7 @@ use crate::request::headers::*;
 use crate::request::method::*;
 
 use crate::request::other::Other;
+use crate::utils::log::log_warning;
 use std::io::Read;
 use std::net::TcpStream;
 use std::time::Duration;
@@ -50,10 +51,6 @@ impl Request {
 
         if request_arr.len() >= 3 {
             req.method = Method::from_str(&request_arr[0].to_string());
-            req.path = percent_encoding::percent_decode(request_arr[1].as_bytes())
-                .decode_utf8()
-                .unwrap()
-                .to_string();
 
             let rs: Vec<&str> = request_arr[2].splitn(2, "\r\n\r\n").collect();
             for part in rs {
@@ -71,7 +68,16 @@ impl Request {
             }
             req.request_headers = headers;
             req.form_data = form_data;
-            req.is_valid_request = true;
+
+            match percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8() {
+                Ok(value) => {
+                    req.path = value.to_string();
+                    req.is_valid_request = true;
+                }
+                Err(err) => {
+                    log_warning(&err);
+                }
+            }
         }
         req.other = Other::parse(stream);
         req
