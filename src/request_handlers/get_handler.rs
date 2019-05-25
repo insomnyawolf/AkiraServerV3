@@ -165,7 +165,7 @@ fn read_dir(request: &Request) -> String {
                     h1{
                         "Listing:"(&request.path)
                     }
-                    @if (request_path.as_bytes()) != (APP_CONFIG.server.root_folder.as_bytes()) {
+                    @if (request.path) != ("/") {
                         a href=".." class="btn btn-primary" { "Upper Directory" }
                     }
                     @if dir_len > 0 {

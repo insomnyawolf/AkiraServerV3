@@ -47,7 +47,9 @@ lazy_static! {
 fn load_settings() -> Config {
     match Config::new() {
         Ok(mut value) => {
-            value.server.root_folder = add_string(&value.server.root_folder, "/".to_string());
+            if !value.server.root_folder.ends_with("/") {
+                value.server.root_folder = value.server.root_folder.clone() + &"/";
+            }
             value
         }
         Err(error) => {
@@ -137,8 +139,4 @@ fn handle_connection(mut stream: TcpStream) {
             log_warning(&"Could Not Flush The Stream");
         }
     };
-}
-
-fn add_string(a: &String, b: String) -> String {
-    a.to_string() + &b
 }
