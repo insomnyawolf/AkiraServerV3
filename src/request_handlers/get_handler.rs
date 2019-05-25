@@ -6,8 +6,8 @@ extern crate mime_guess;
 use maud::*;
 use std::fs;
 use std::fs::File;
-use std::io::Read;
 use std::io::Write;
+use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
 use crate::request::request::Request;
@@ -27,10 +27,6 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
     if path.exists() {
         let meta = fs::metadata(&path).unwrap();
         if meta.is_file() {
-            // TODO Optimize this, hend filetipe headers and load file in chunks
-            let mut file = File::open(&path).unwrap();
-            let mut data: Vec<u8> = Vec::new();
-
             // Headers
             let mut headers = ResponseHeaders::new(HttpStatus::OK);
             headers.set_cross_origin_allow_all();
@@ -53,9 +49,29 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
             }
 
             check_stream_write(stream.write(headers_processed.as_bytes()));
-
-            file.read_to_end(&mut data).unwrap();
-            check_stream_write(stream.write(data.as_slice()));
+            // Max buffer Read
+            const CAP: usize = 8192;
+            let file = File::open(&path).unwrap();
+            let mut reader = BufReader::with_capacity(CAP, file);
+            // Chunked Transfer WORKS!!! \:D/
+            loop {
+                let length = {
+                    let buffer = reader.fill_buf().unwrap();
+                    // do stuff with buffer here
+                    match stream.write(buffer) {
+                        Err(err) => {
+                            log_error(&err);
+                            break;
+                        }
+                        Ok(_value) => {}
+                    }
+                    buffer.len()
+                };
+                if length == 0 {
+                    break;
+                }
+                reader.consume(length);
+            }
         } else if meta.is_dir() {
             if APP_CONFIG.server.list_directories {
                 let mut headers = ResponseHeaders::new(HttpStatus::OK);
