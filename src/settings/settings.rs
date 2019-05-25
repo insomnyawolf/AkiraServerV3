@@ -40,7 +40,7 @@ impl Settings {
 
     /// Prints Current Config to stdout
     pub fn show(&self) {
-        utils::log::log(self, Color::Magenta);
+        utils::log::log_custom(&"", self, Color::Magenta, true);
     }
 
     // ToDo funciona con la implementacion actual, WIP

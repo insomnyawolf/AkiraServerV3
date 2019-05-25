@@ -21,6 +21,7 @@ use std::time::Duration;
 // Request Handlers
 mod request_handlers;
 use crate::request_handlers::get_handler::handle_get;
+use crate::request_handlers::unssuported_handler::handle_unsupported;
 
 // Util
 mod utils;
@@ -38,16 +39,21 @@ use crate::request::request::Request;
 
 // Response
 mod response;
-use crate::response::headers::ResponseHeaders;
-use crate::response::status::HttpStatus;
-use termcolor::Color;
 
 lazy_static! {
     pub static ref APP_CONFIG: Settings = load_settings();
 }
 
 fn load_settings() -> Settings {
-    let mut settings: Settings = Settings::new().unwrap();
+    let mut settings: Settings;
+    match Settings::new() {
+        Ok(value) => {
+            settings = value;
+        }
+        Err(error) => {
+            panic!("{}", error);
+        }
+    }
     settings.server.root_folder = add_string(&settings.server.root_folder, "/".to_string());
     settings
 }
@@ -73,8 +79,7 @@ fn server() {
     let listener = match listener_option {
         Ok(value) => (value),
         Err(error) => {
-            log_error_fatal(&error);
-            panic!();
+            panic!("{}", error);
         }
     };
 
@@ -85,12 +90,16 @@ fn server() {
     // Bucle para cada peticion tcp
     for stream in listener.incoming() {
         // Canal de datos tcp
-        let stream = stream.unwrap();
-        // Inicia el trabajo en otro hilo su hay tareas disponibles, ni no, espera a que alguna finalize
-        pool.execute(move || {
-            // Hace cosas
-            handle_connection(stream);
-        });
+        match stream {
+            Ok(value) => {
+                // Inicia el trabajo en otro hilo su hay tareas disponibles, ni no, espera a que alguna finalize
+                pool.execute(move || {
+                    // Hace cosas
+                    handle_connection(value);
+                });
+            }
+            Err(error) => log_error(&error),
+        }
     }
 }
 
@@ -98,12 +107,12 @@ fn handle_connection(mut stream: TcpStream) {
     // Create a Duration ans set is as timeout
     // That way the server doesnt keep waiting for more bytes
     let timeout = Some(Duration::new(0, APP_CONFIG.timeout.get_nanoseconds()));
-    // Get a copy of TcpStream
+
     //Parse request data
-    let request = Request::parse(stream.try_clone().unwrap(), timeout);
+    let request = Request::parse(&stream, timeout);
 
     if request.is_valid_request {
-        log(&request, Color::Cyan);
+        log_verbose(&request);
 
         // Switch Equivalent
         match request.method {
@@ -115,18 +124,21 @@ fn handle_connection(mut stream: TcpStream) {
             }
         }
     } else {
-        log(&"Invalid Request", Color::Red);
+        log_warning(&"Invalid Request");
     }
 
     // Avoid Dead Connections?
-    stream.flush().ok().unwrap();
-    stream.shutdown(Shutdown::Both).ok().unwrap();
-}
-
-fn handle_unsupported(mut stream: &TcpStream) {
-    log(&"Unsupported Method", Color::Red);
-    let mut headers = ResponseHeaders::new(HttpStatus::NotImplemented);
-    stream.write(&headers.get_headers().as_bytes()).unwrap();
+    match stream.flush().ok() {
+        Some(_value) => match stream.shutdown(Shutdown::Both).ok() {
+            None => {
+                log_warning(&"Could Not Shutdown The Stream");
+            }
+            _ => {}
+        },
+        None => {
+            log_warning(&"Could Not Flush The Stream");
+        }
+    };
 }
 
 fn add_string(a: &String, b: String) -> String {

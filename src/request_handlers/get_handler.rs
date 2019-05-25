@@ -11,11 +11,11 @@ use std::io::Write;
 use std::net::TcpStream;
 
 use crate::request::request::Request;
+use crate::request_handlers::check_write;
 use crate::response::headers::ResponseHeaders;
 use crate::response::status::HttpStatus;
-use crate::utils::log::{log, log_error};
+use crate::utils::log::*;
 use crate::APP_CONFIG;
-use termcolor::Color;
 
 // Resources
 const BOOTSTRAP_CSS: &'static str = include_str!("../../resources/bootstrap.css");
@@ -42,39 +42,35 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
                     headers.set_content_type(value.to_string());
                 }
                 None => {
-                    log_error(&"No mime found", Color::Yellow);
+                    log_error(&"No mime found");
                 }
             };
             let headers_processed = headers.get_headers();
 
             if APP_CONFIG.debug.active {
-                log(&headers, Color::Cyan);
-                log(&headers_processed, Color::Cyan);
+                log_verbose(&headers);
+                log_verbose(&headers_processed);
             }
 
-            stream.write(headers_processed.as_bytes()).unwrap();
+            check_write(stream.write(headers_processed.as_bytes()));
 
             file.read_to_end(&mut data).unwrap();
-            stream.write(data.as_slice()).unwrap();
+            check_write(stream.write(data.as_slice()));
         } else if meta.is_dir() {
             if APP_CONFIG.server.list_directories {
                 let mut headers = ResponseHeaders::new(HttpStatus::OK);
-                stream.write(headers.get_headers().as_bytes()).unwrap();
-                stream.write(read_dir(&request).as_bytes()).unwrap();
+                check_write(stream.write(headers.get_headers().as_bytes()));
+                check_write(stream.write(read_dir(&request).as_bytes()));
             } else {
                 let mut headers = ResponseHeaders::new(HttpStatus::Forbidden);
-                stream.write(headers.get_headers().as_bytes()).unwrap();
-                stream
-                    .write(error_page(HttpStatus::Forbidden).as_bytes())
-                    .unwrap();
+                check_write(stream.write(headers.get_headers().as_bytes()));
+                check_write(stream.write(error_page(HttpStatus::Forbidden).as_bytes()));
             }
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
-        stream.write(headers.get_headers().as_bytes()).unwrap();
-        stream
-            .write(error_page(HttpStatus::NotFound).as_bytes())
-            .unwrap();
+        check_write(stream.write(headers.get_headers().as_bytes()));
+        check_write(stream.write(error_page(HttpStatus::NotFound).as_bytes()));
     }
 }
 

@@ -26,7 +26,7 @@ pub struct Request {
 
 impl Request {
     /// Parse request and headers from byte buffer
-    pub fn parse(mut stream: TcpStream, timeout: Option<Duration>) -> Request {
+    pub fn parse(mut stream: &TcpStream, timeout: Option<Duration>) -> Request {
         // Create Structure with default values
         let mut req = Request::default();
         let mut form_data = FormData::default();
