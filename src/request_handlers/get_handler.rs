@@ -26,11 +26,19 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
     let path_str = request.get_local_path(&APP_CONFIG.server.root_folder);
     let path: &Path = std::path::Path::new(&path_str);
     if path.exists() {
-        let meta: Metadata = fs::metadata(&path).unwrap();
-        if meta.is_file() {
-            serve_file(stream, meta, path);
-        } else if meta.is_dir() {
-            serve_directory(stream, request);
+        match fs::metadata(&path) {
+            Ok(value) => {
+                if value.is_file() {
+                    serve_file(stream, value, path);
+                } else if value.is_dir() {
+                    serve_directory(stream, request);
+                } else {
+                    log_error(&"The target is neither a file or a directory.");
+                }
+            }
+            Err(err) => {
+                log_warning(&err);
+            }
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
