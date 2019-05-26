@@ -35,6 +35,7 @@ fn do_log_debug<T: Any + Debug>(tag: &str, data: &T, color: Color, intense: bool
             check_console_write(
                 colored_stdout.set_color(ColorSpec::new().set_fg(Some(Color::White))),
             );
+            check_console_write(writeln!(&mut colored_stdout, ""));
         }
         if APP_CONFIG.debug.log_to_file {
             // Todo
