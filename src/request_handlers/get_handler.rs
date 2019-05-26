@@ -72,26 +72,32 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
     check_stream_write(stream.write(headers_processed.as_bytes()));
     // Max buffer Read
     const CAP: usize = 8192;
-    let file = File::open(&path).unwrap();
-    let mut reader = BufReader::with_capacity(CAP, file);
-    // Chunked Transfer WORKS!!! \:D/
-    loop {
-        let length = {
-            let buffer = reader.fill_buf().unwrap();
-            // do stuff with buffer here
-            match stream.write(buffer) {
-                Err(err) => {
-                    log_error(&err);
+    match File::open(&path) {
+        Ok(file) => {
+            let mut reader = BufReader::with_capacity(CAP, file);
+            // Chunked Transfer WORKS!!! \:D/
+            loop {
+                let length = {
+                    let buffer = reader.fill_buf().unwrap();
+                    // do stuff with buffer here
+                    match stream.write(buffer) {
+                        Err(err) => {
+                            log_error(&err);
+                            break;
+                        }
+                        Ok(_value) => {}
+                    }
+                    buffer.len()
+                };
+                if length == 0 {
                     break;
                 }
-                Ok(_value) => {}
+                reader.consume(length);
             }
-            buffer.len()
-        };
-        if length == 0 {
-            break;
         }
-        reader.consume(length);
+        Err(err) => {
+            log_error(&err);
+        }
     }
 }
 
@@ -107,8 +113,14 @@ fn serve_directory(mut stream: &TcpStream, request: &Request) {
 
                 let p: &Path = std::path::Path::new(&file);
 
-                let meta: Metadata = fs::metadata(p).unwrap();
-                serve_file(stream, meta, p);
+                match fs::metadata(p) {
+                    Ok(value) => {
+                        serve_file(stream, value, p);
+                    }
+                    Err(err) => {
+                        log_error(&err);
+                    }
+                }
                 return;
             }
         }
@@ -240,16 +252,28 @@ impl DirContent {
     fn read_dir(path: &String) -> DirContent {
         let mut content: DirContent = DirContent::default();
 
-        let paths = fs::read_dir(&path).unwrap();
+        match fs::read_dir(&path) {
+            Ok(paths) => {
+                for item_info in paths {
+                    let item_path = item_info.unwrap().path().display().to_string();
 
-        for item_info in paths {
-            let item_path = item_info.unwrap().path().display().to_string();
-            let md = fs::metadata(&item_path).unwrap();
-            let web_path = get_web_path(item_path, path);
-            if md.is_dir() {
-                content.directories.push(web_path);
-            } else if md.is_file() {
-                content.files.push(web_path);
+                    match fs::metadata(&item_path) {
+                        Ok(md) => {
+                            let web_path = get_web_path(item_path, path);
+                            if md.is_dir() {
+                                content.directories.push(web_path);
+                            } else if md.is_file() {
+                                content.files.push(web_path);
+                            }
+                        }
+                        Err(err) => {
+                            log_error(&err);
+                        }
+                    }
+                }
+            }
+            Err(err) => {
+                log_error(&err);
             }
         }
         content
