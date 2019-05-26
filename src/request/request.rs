@@ -71,7 +71,7 @@ impl Request {
 
             match percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8() {
                 Ok(value) => {
-                    req.path = value.to_string();
+                    req.path = value.trim_start_matches("/..").to_string();
                     req.is_valid_request = true;
                 }
                 Err(err) => {
