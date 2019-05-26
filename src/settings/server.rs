@@ -62,4 +62,6 @@ pub struct Server {
     ///
     /// On a 16 core cpu this will be max 32 total threads
     pub workers_per_thread: usize,
+
+    pub index: Vec<String>,
 }

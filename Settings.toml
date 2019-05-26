@@ -5,6 +5,11 @@ ttl = 128
 root_folder = "./demo" #if windows and you want to use \, remember to escape the path and use \\
 list_directories = true
 workers_per_thread = 1
+index = [
+          "index.html",
+          "index.htm",
+          "index"
+         ]
 
 [Timeout]
 request_miliseconds = 10 # 1000 Miliseconds = 1 Second
