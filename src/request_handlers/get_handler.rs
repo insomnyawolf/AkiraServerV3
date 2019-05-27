@@ -59,7 +59,7 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
             headers.set_content_type(value.to_string());
         }
         None => {
-            log_error(&"No mime found");
+            log_warning(&"No mime found");
         }
     };
     let headers_processed = headers.get_headers();
