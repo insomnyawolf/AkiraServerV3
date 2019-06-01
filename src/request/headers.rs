@@ -95,100 +95,147 @@ impl RequestHeaders {
 
         // ToDo Improove this loop
         for current in client_arr {
-            if generate_field_string(
-                &mut headers.acceptable_instance_manipulations,
-                &current,
-                "A-IM: ",
-            ) {
-            } else if current.starts_with("Accept: ") {
-                // Todo Check This
-                let values = current.trim_start_matches("Accept: ").replace(";", ",");
-                let arr: Vec<&str> = values.split(",").collect();
-
-                for data in arr {
-                    headers.accept.push(data.to_string());
-                }
-            } else if generate_field_string(
-                &mut headers.accept_charset,
-                &current,
-                "Accept-Charset: ",
-            ) {
-            } else if generate_field_string_vec(
-                &mut headers.accept_encoding,
-                &current,
-                "Accept-Encoding: ",
-            ) {
-            } else if generate_field_string(
-                &mut headers.accept_language,
-                &current,
-                "Accept-Language: ",
-            ) {
-            } else if generate_field_string(
-                &mut headers.accept_datetime,
-                &current,
-                "Accept-Datetime: ",
-            ) {
-            } else if generate_field_string(
-                &mut headers.access_control_request_method,
-                &current,
-                "Access-Control-Request-Method: ",
-            ) {
-            } else if generate_field_string(&mut headers.authorization, &current, "Authorization: ")
-            {
-            } else if generate_field_string(&mut headers.cache_control, &current, "Cache-Control: ")
-            {
-            } else if generate_field_string(&mut headers.connection, &current, "Connection: ") {
-            } else if generate_field_u64(&mut headers.content_length, &current, "Content-Length: ")
-            {
-            } else if generate_field_string(&mut headers.content_md5, &current, "Content-MD5: ") {
-            } else if generate_field_string(&mut headers.content_type, &current, "Content-Type: ") {
-                let t: Vec<&str> = current.split("; ").collect();
-                if t.len() > 1 {
-                    let z = t[1];
-                    let bound_str = "boundary=";
-                    if z.starts_with(bound_str) {
-                        let bond_str_len = bound_str.len();
-                        let bounds = z[bond_str_len..].to_string();
-                        headers.content_type =
-                            headers.content_type.trim_end_matches(&bounds).to_string();
-                        headers.content_type = headers
-                            .content_type
-                            .trim_end_matches("; boundary=")
-                            .to_string();
-                        headers.content_bounds = bounds;
-                    }
-                }
-            } else if generate_field_string(&mut headers.cookie, &current, "Cookie: ") {
-            } else if generate_field_string(&mut headers.date, &current, "Date: ") {
-            } else if generate_field_string(&mut headers.expect, &current, "Expect: ") {
-            } else if generate_field_string(&mut headers.forwarded, &current, "Forwarded: ") {
-            } else if generate_field_string(&mut headers.from, &current, "From: ") {
-            } else if generate_field_string(&mut headers.host, &current, "Host: ") {
-            } else if generate_field_string(&mut headers.max_forwards, &current, "Max-Forwards: ") {
-            } else if generate_field_string(&mut headers.origin, &current, "Origin: ") {
-            } else if generate_field_string(&mut headers.pragma, &current, "Pragma: ") {
-            } else if generate_field_string(
-                &mut headers.proxy_authorization,
-                &current,
-                "Proxy-Authorization: ",
-            ) {
-            } else if generate_field_string(&mut headers.range, &current, "Range: ") {
-            } else if generate_field_string(&mut headers.referer, &current, "Referer: ") {
-            } else if generate_field_string(&mut headers.transfer_encodings, &current, "TE: ") {
-            } else if generate_field_string(&mut headers.user_agent, &current, "User-Agent: ") {
-            } else if generate_field_string(&mut headers.via, &current, "Via: ") {
-            } else if generate_field_string(&mut headers.warning, &current, "Warning: ") {
-            } else if generate_field_string(&mut headers.version, &current, "HTTP/") {
-            } else if generate_field_string(
-                &mut headers.upgrade_insecure_requests,
-                &current,
-                "Upgrade-Insecure-Requests: ",
-            ) {
-            } else if generate_field_string(&mut headers.dnt, &current, "DNT: ") {
-            } else {
-                headers.other.push(current.to_string());
-            }
+            parse_header(&mut headers, current);
         }
+
         headers
     }
+}
+
+fn parse_header(headers: &mut RequestHeaders, current: &str) {
+    if generate_field_string(
+        &mut headers.acceptable_instance_manipulations,
+        &current,
+        "A-IM: ",
+    ) {
+        return;
+    }
+    if current.starts_with("Accept: ") {
+        // Todo Check This
+        let values = current.trim_start_matches("Accept: ").replace(";", ",");
+        let arr: Vec<&str> = values.split(",").collect();
+
+        for data in arr {
+            headers.accept.push(data.to_string());
+        }
+        return;
+    }
+    if generate_field_string(&mut headers.accept_charset, &current, "Accept-Charset: ") {
+        return;
+    }
+    if generate_field_string_vec(&mut headers.accept_encoding, &current, "Accept-Encoding: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.accept_language, &current, "Accept-Language: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.accept_datetime, &current, "Accept-Datetime: ") {
+        return;
+    }
+    if generate_field_string(
+        &mut headers.access_control_request_method,
+        &current,
+        "Access-Control-Request-Method: ",
+    ) {
+        return;
+    }
+    if generate_field_string(&mut headers.authorization, &current, "Authorization: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.cache_control, &current, "Cache-Control: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.connection, &current, "Connection: ") {
+        return;
+    }
+    if generate_field_u64(&mut headers.content_length, &current, "Content-Length: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.content_md5, &current, "Content-MD5: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.content_type, &current, "Content-Type: ") {
+        let t: Vec<&str> = current.split("; ").collect();
+        if t.len() > 1 {
+            let z = t[1];
+            let bound_str = "boundary=";
+            if z.starts_with(bound_str) {
+                let bond_str_len = bound_str.len();
+                let bounds = z[bond_str_len..].to_string();
+                headers.content_type = headers.content_type.trim_end_matches(&bounds).to_string();
+                headers.content_type = headers
+                    .content_type
+                    .trim_end_matches("; boundary=")
+                    .to_string();
+                headers.content_bounds = bounds;
+            }
+        }
+        return;
+    }
+    if generate_field_string(&mut headers.cookie, &current, "Cookie: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.date, &current, "Date: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.expect, &current, "Expect: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.forwarded, &current, "Forwarded: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.from, &current, "From: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.host, &current, "Host: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.max_forwards, &current, "Max-Forwards: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.origin, &current, "Origin: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.pragma, &current, "Pragma: ") {
+        return;
+    }
+    if generate_field_string(
+        &mut headers.proxy_authorization,
+        &current,
+        "Proxy-Authorization: ",
+    ) {
+        return;
+    }
+    if generate_field_string(&mut headers.range, &current, "Range: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.referer, &current, "Referer: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.transfer_encodings, &current, "TE: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.user_agent, &current, "User-Agent: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.via, &current, "Via: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.warning, &current, "Warning: ") {
+        return;
+    }
+    if generate_field_string(&mut headers.version, &current, "HTTP/") {
+        return;
+    }
+    if generate_field_string(
+        &mut headers.upgrade_insecure_requests,
+        &current,
+        "Upgrade-Insecure-Requests: ",
+    ) {
+        return;
+    }
+    if generate_field_string(&mut headers.dnt, &current, "DNT: ") {
+        return;
+    }
+    headers.other.push(current.to_string());
 }
