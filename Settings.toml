@@ -2,7 +2,7 @@
 host = "0.0.0.0" #0.0.0.0 will listen on all interfaces
 port = "80"
 ttl = 128
-#if windows and you want to use \, remember to escape the path and use \\
+#if windows and you want to use "\", remember to escape the path and use "\\" or use "/" allways
 root_folder = "./demo" 
 list_directories = true
 workers_per_thread = 1
