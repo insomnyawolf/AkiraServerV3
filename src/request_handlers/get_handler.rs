@@ -70,8 +70,8 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
     }
 
     check_stream_write(stream.write(headers_processed.as_bytes()));
-    // Max buffer Read
-    const CAP: usize = 8192;
+    // Max buffer Read in bytes (1048576 == 1 Megabytes)
+    const CAP: usize = 1048576;
     match File::open(&path) {
         Ok(file) => {
             let mut reader = BufReader::with_capacity(CAP, file);
