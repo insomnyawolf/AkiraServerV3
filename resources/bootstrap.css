@@ -640,8 +640,8 @@ a.btn.disabled, fieldset:disabled a.btn {
 }
 
 .alert-danger {
-	color: #78281f;
-	background-color: #ff000011;
+	color: #fff;
+	background-color: #78281f;
 }
 
 .alert-danger hr {
