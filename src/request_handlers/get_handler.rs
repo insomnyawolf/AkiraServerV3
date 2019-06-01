@@ -165,6 +165,7 @@ fn error_page(error_code: HttpStatus) -> String {
             body{
                 div class="container"{
                     // Todo Fix this alert
+                    br{}
                     div class="alert alert-danger" role="alert" {
                         h3{
                             "Oops! the request can not be processed"
