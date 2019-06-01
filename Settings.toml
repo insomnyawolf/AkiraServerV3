@@ -2,7 +2,8 @@
 host = "0.0.0.0" #0.0.0.0 will listen on all interfaces
 port = "80"
 ttl = 128
-root_folder = "./demo" #if windows and you want to use \, remember to escape the path and use \\
+#if windows and you want to use \, remember to escape the path and use \\
+root_folder = "./demo" 
 list_directories = true
 workers_per_thread = 1
 index = [
@@ -12,7 +13,8 @@ index = [
          ]
 
 [Timeout]
-request_miliseconds = 10 # 1000 Miliseconds = 1 Second
+# 1000 Miliseconds = 1 Second
+request_miliseconds = 10 
 
 [debug]
 active = true
@@ -20,4 +22,5 @@ error = true
 warning = true
 verbose = false
 log_to_console = true
-log_to_file = true # ToDo Work In Progress
+# ToDo Work In Progress
+log_to_file = true 
