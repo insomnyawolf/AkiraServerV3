@@ -1,6 +1,4 @@
 use crate::request::utils::*;
-use std::env::current_exe;
-
 // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 
 #[derive(Debug, Default)]
@@ -110,186 +108,130 @@ impl RequestHeaders {
 }
 
 fn parse_header(headers: &mut RequestHeaders, current: &str) {
-    let header: Vec<&str> = current.rsplit("\r\n").collect();
+    let header: Vec<&str> = current.rsplit(": ").collect();
 
-    let mut pattern = "A-IM: ";
-    if start_with(&current, &pattern) {
-        headers.acceptable_instance_manipulations = generate_field_string(&current, &pattern);
-        return;
-    }
-    pattern = "Accept: ";
-    if start_with(&current, &pattern) {
-        // Todo Check This
-        let values = current.trim_start_matches(pattern);
-        //values = &values.replace(";", ",")[..];
-        let arr: Vec<&str> = values.split(";").collect();
+    if header.len() == 2 {
+        match header[0] {
+            "A-IM" => {
+                headers.acceptable_instance_manipulations = generate_field_string(&header[1]);
+            },
+            "Accept" => {
+                //values = &values.replace(";", ",")[..];
+                let arr: Vec<&str> = header[1].split(";").collect();
 
-        for data in arr {
-            headers.accept.push(Cow::Owned(data.to_string()));
+                for data in arr {
+                    headers.accept.push(data.to_string());
+                }
+            },
+            "Accept-Charset" => {
+                headers.accept_charset = generate_field_string(&header[1]);
+            },
+            "Accept-Encoding" => {
+                headers.accept_encoding = generate_field_string_vec(&header[1]);
+            },
+            "Accept-Language" => {
+                headers.accept_language = generate_field_string(&header[1]);
+            },
+            "Accept-Datetime" => {
+                headers.accept_datetime = generate_field_string(&header[1]);
+            },
+            "Access-Control-Request-Method" => {
+                headers.access_control_request_method = generate_field_string(&header[1]);
+            },
+            "Authorization" => {
+                headers.authorization = generate_field_string(&header[1]);
+            },
+
+            "Cache-Control" => {
+                headers.cache_control = generate_field_string(&header[1]);
+            },
+            "Connection" => {
+                headers.connection = generate_field_string(&header[1]);
+            },
+            "Content-Length" => {
+                headers.content_length = generate_field_u64(&header[1]);
+            },
+            "Content-MD5" => {
+                headers.content_md5 = generate_field_string(&header[1]);
+            },
+            "Content-Type" => {
+                headers.content_type = generate_field_string(&header[1]);
+                let t: Vec<&str> = current.split("; ").collect();
+                if t.len() > 1 {
+                    let z = t[1];
+                    let bound_str = "boundary=";
+                    if z.starts_with(bound_str) {
+                        let bond_str_len = bound_str.len();
+                        let bounds = &z[bond_str_len..];
+                        headers.content_type = headers.content_type.trim_end_matches(&bounds).to_string();
+                        headers.content_type = headers.content_type.trim_end_matches("; boundary=").to_string();
+                        headers.content_bounds = bounds.to_string();
+                    }
+                }
+            },
+            "Cookie" => {
+                headers.cookie = generate_field_string(&header[1]);
+            },
+            "Date" => {
+                headers.date = generate_field_string(&header[1]);
+            },
+            "Expect" => {
+                headers.expect = generate_field_string(&header[1]);
+            },
+            "Forwarded" => {
+                headers.forwarded = generate_field_string(&header[1]);
+            },
+            "From" => {
+                headers.from = generate_field_string(&header[1]);
+            },
+            "Host" => {
+                headers.host = generate_field_string(&header[1]);
+            },
+            "Max-Forwards" => {
+                headers.max_forwards = generate_field_string(&header[1]);
+            },
+            "Origin" => {
+                headers.origin = generate_field_string(&header[1]);
+            },
+            "Pragma" => {
+                headers.pragma = generate_field_string(&header[1]);
+            },
+            "Proxy-Authorization" => {
+                headers.proxy_authorization = generate_field_string(&header[1]);
+            },
+            "Range" => {
+                headers.range = generate_field_string(&header[1]);
+            },
+            "Referer" => {
+                headers.referer = generate_field_string(&header[1]);
+            },
+            "TE" => {
+                headers.transfer_encodings = generate_field_string(&header[1]);
+            },
+            "User-Agent" => {
+                headers.user_agent = generate_field_string(&header[1]);
+            },
+            "Via" => {
+                headers.via = generate_field_string(&header[1]);
+            },
+            "Warning" => {
+                headers.warning = generate_field_string(&header[1]);
+            },
+            "Upgrade-Insecure-Requests" => {
+                headers.upgrade_insecure_requests = generate_field_string(&header[1]);
+            },
+            "DNT" => {
+                headers.dnt = generate_field_string(&header[1]);
+            },
+            _ => {
+                headers.other.push(current.to_string());
+            },
         }
-        return;
-    }
-    pattern = "Accept-Charset: ";
-    if start_with(&current, &pattern) {
-        headers.accept_charset = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Accept-Encoding: ";
-    if start_with(&current, &pattern) {
-        headers.accept_encoding = generate_field_string_vec(&current, pattern);
-        return;
-    }
-    pattern = "Accept-Language: ";
-    if start_with(&current, &pattern) {
-        headers.accept_language = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Accept-Datetime: ";
-    if start_with(&current, &pattern) {
-        headers.accept_datetime = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Access-Control-Request-Method: ";
-    if start_with(&current, &pattern) {
-        headers.access_control_request_method = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Authorization: ";
-    if start_with(&current, &pattern) {
-        headers.authorization = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Cache-Control: ";
-    if start_with(&current, &pattern) {
-        headers.cache_control = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Connection: ";
-    if start_with(&current, &pattern) {
-        headers.connection = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Content-Length: ";
-    if start_with(&current, &pattern) {
-        headers.content_length = generate_field_u64(&current, pattern);
-        return;
-    }
-    pattern = "Content-MD5: ";
-    if start_with(&current, &pattern) {
-        headers.content_md5 = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Content-Type: ";
-    if start_with(&current, &pattern) {
-        headers.content_type = generate_field_string(&current, pattern);
-        let t: Vec<&str> = current.split("; ").collect();
-        if t.len() > 1 {
-            let z = t[1];
-            let bound_str = "boundary=";
-            if z.starts_with(bound_str) {
-                let bond_str_len = bound_str.len();
-                let bounds = &z[bond_str_len..];
-                headers.content_type = Cow::Owned(headers.content_type.trim_end_matches(&bounds).to_string());
-                headers.content_type = Cow::Owned(headers.content_type.trim_end_matches("; boundary=").to_string());
-                headers.content_bounds = Cow::Owned(bounds.to_string());
-            }
+    } else {
+        if start_with(&current, "HTTP/") {
+            headers.version = generate_field_string(current);
+            return;
         }
-        return;
+        headers.other.push(current.to_string());
     }
-    pattern = "Cookie: ";
-    if start_with(&current, &pattern) {
-        headers.cookie = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Date: ";
-    if start_with(&current, &pattern) {
-        headers.date = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Expect: ";
-    if start_with(&current, &pattern) {
-        headers.expect = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Forwarded: ";
-    if start_with(&current, &pattern) {
-        headers.forwarded = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "From: ";
-    if start_with(&current, &pattern) {
-        headers.from = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Host: ";
-    if start_with(&current, &pattern) {
-        headers.host = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Max-Forwards: ";
-    if start_with(&current, &pattern) {
-        headers.max_forwards = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Origin: ";
-    if start_with(&current, &pattern) {
-        headers.origin = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Pragma: ";
-    if start_with(&current, &pattern) {
-        headers.pragma = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Proxy-Authorization: ";
-    if start_with(&current, &pattern) {
-        headers.proxy_authorization = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Range: ";
-    if start_with(&current, &pattern) {
-        headers.range = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Referer: ";
-    if start_with(&current, &pattern) {
-        headers.referer = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "TE: ";
-    if start_with(&current, &pattern) {
-        headers.transfer_encodings = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "User-Agent: ";
-    if start_with(&current, &pattern) {
-        headers.user_agent = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Via: ";
-    if start_with(&current, &pattern) {
-        headers.via = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Warning: ";
-    if start_with(&current, &pattern) {
-        headers.warning = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "HTTP/";
-    if start_with(&current, &pattern) {
-        headers.version = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "Upgrade-Insecure-Requests: ";
-    if start_with(&current, &pattern) {
-        headers.upgrade_insecure_requests = generate_field_string(&current, pattern);
-        return;
-    }
-    pattern = "DNT: ";
-    if start_with(&current, &pattern) {
-        headers.dnt = generate_field_string(&current, pattern);
-        return;
-    }
-    headers.other.push(Cow::Owned(current.to_string()));
 }

@@ -39,9 +39,7 @@ impl FormData {
             if element_str != "\r\n" || element_str != "" {
                 let content_disposition = "Content-Disposition: form-data; ";
                 if element_str.contains(content_disposition) {
-                    let element = MultipartFormElement::new(
-                        element_str.replace(content_disposition, "").to_string(),
-                    );
+                    let element = MultipartFormElement::new(element_str.replace(content_disposition, "").to_string());
                     if element.is_file {
                         self.multipart_file.push(MultipartFile::new(element));
                     } else {
@@ -102,7 +100,8 @@ impl FormField {
 }
 
 #[derive(Debug, Default, PartialEq)]
-/// Structure that have each field in a MultiPartForm before processing them and splitting them on Files and Fields
+/// Structure that have each field in a MultiPartForm before processing them and splitting them on
+/// Files and Fields
 pub struct MultipartFormElement {
     //pub data: Vec<String>,
     name: String,
@@ -126,14 +125,17 @@ impl MultipartFormElement {
         if len > 1 {
             let info: Vec<&str> = data.clone()[0].split("\r\n").collect();
             for current in info {
-                if generate_field_string(&mut element.content_type, &current, "Content-Type: ") {
+                if current.starts_with("Content-Type: ") {
+                    element.content_type = generate_field_string(&current.trim_start_matches("Content-Type: "));
                     element.is_file = true;
                 } else {
                     let inf: Vec<&str> = current.split("\"; ").collect();
                     for i in inf {
-                        if generate_field_string(&mut element.name, &i, "name=\"") {
+                        if i.starts_with("name=\"") {
+                            element.name = generate_field_string(&i.trim_start_matches("name=\""));
                             element.name = element.name.replace("\"", "");
-                        } else if generate_field_string(&mut element.filename, &i, "filename=\"") {
+                        } else if i.starts_with("filename=\"") {
+                            element.filename = generate_field_string(&i.trim_start_matches("filename=\""));
                             element.filename = element.filename.replace("\"", "");
                         } else {
                             element.other.push(i.to_string());
@@ -147,7 +149,7 @@ impl MultipartFormElement {
             }
         }
         if element.is_file {
-            generate_field_vec_u8(&mut element.file, &data[1]);
+            element.file = generate_field_vec_u8(&data[1]);
         } else {
             element.content = data[1].to_string();
         }
