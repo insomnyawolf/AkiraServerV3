@@ -41,7 +41,7 @@ impl Request {
         stream.read_to_end(&mut buffer_full).ok();
 
         //Parse request data
-        req.raw = String::from_utf8_lossy(&buffer_full.as_slice())
+        req.raw = unsafe { String::from_utf8_unchecked(buffer_full) }
             .to_string()
             .replace('\u{0}', "");
 

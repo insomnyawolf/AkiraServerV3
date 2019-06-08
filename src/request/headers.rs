@@ -1,4 +1,5 @@
 use crate::request::utils::*;
+use std::env::current_exe;
 
 // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 
@@ -22,7 +23,8 @@ pub struct RequestHeaders {
     pub access_control_request_method: String,
     /// Authentication credentials for HTTP authentication
     pub authorization: String,
-    /// Used to specify directives that must be obeyed by all caching mechanisms along the request-response chain
+    /// Used to specify directives that must be obeyed by all caching mechanisms along the
+    /// request-response chain
     pub cache_control: String,
     /// Control options for the current connection and list of hop-by-hop request fields
     pub connection: String,
@@ -44,19 +46,23 @@ pub struct RequestHeaders {
     pub forwarded: String,
     /// The email address of the user making the request
     pub from: String,
-    /// The domain name of the server (for virtual hosting), and the TCP port number on which the server is listening
+    /// The domain name of the server (for virtual hosting), and the TCP port number on which the
+    /// server is listening
     pub host: String,
     /// Limit the number of times the message can be forwarded through proxies or gateways
     pub max_forwards: String,
-    /// Initiates a request for cross-origin resource sharing (asks server for Access-Control-* response fields)
+    /// Initiates a request for cross-origin resource sharing (asks server for Access-Control-*
+    /// response fields)
     pub origin: String,
-    /// Implementation-specific fields that may have various effects anywhere along the request-response chain
+    /// Implementation-specific fields that may have various effects anywhere along the
+    /// request-response chain
     pub pragma: String,
     /// Authorization credentials for connecting to a proxy
     pub proxy_authorization: String,
     /// Request only part of an entity. Bytes are numbered from 0
     pub range: String,
-    /// This is the address of the previous web page from which a link to the currently requested page was followed (misspelled in the RFC)
+    /// This is the address of the previous web page from which a link to the currently requested
+    /// page was followed (misspelled in the RFC)
     pub referer: String,
     /** The transfer encodings the user agent is willing to accept:
     the same values as for the response header field Transfer-Encoding can be used,
@@ -77,7 +83,8 @@ pub struct RequestHeaders {
     // Common non-standard request fields
     /// HTTP Protocol used version
     pub version: String,
-    /// Tells a server which (presumably in the middle of a HTTP -> HTTPS migration) hosts mixed content that the client would prefer redirection to HTTPS
+    /// Tells a server which (presumably in the middle of a HTTP -> HTTPS migration) hosts mixed
+    /// content that the client would prefer redirection to HTTPS
     pub upgrade_insecure_requests: String,
     /// Requests a web application to disable their tracking of a user **/
     pub dnt: String,
@@ -103,11 +110,9 @@ impl RequestHeaders {
 }
 
 fn parse_header(headers: &mut RequestHeaders, current: &str) {
-    if generate_field_string(
-        &mut headers.acceptable_instance_manipulations,
-        &current,
-        "A-IM: ",
-    ) {
+    let header: Vec<&str> = current.rsplit("\r\n").collect();
+
+    if generate_field_string(&mut headers.acceptable_instance_manipulations, &current, "A-IM: ") {
         return;
     }
     if current.starts_with("Accept: ") {
@@ -163,10 +168,7 @@ fn parse_header(headers: &mut RequestHeaders, current: &str) {
                 let bond_str_len = bound_str.len();
                 let bounds = z[bond_str_len..].to_string();
                 headers.content_type = headers.content_type.trim_end_matches(&bounds).to_string();
-                headers.content_type = headers
-                    .content_type
-                    .trim_end_matches("; boundary=")
-                    .to_string();
+                headers.content_type = headers.content_type.trim_end_matches("; boundary=").to_string();
                 headers.content_bounds = bounds;
             }
         }
@@ -199,11 +201,7 @@ fn parse_header(headers: &mut RequestHeaders, current: &str) {
     if generate_field_string(&mut headers.pragma, &current, "Pragma: ") {
         return;
     }
-    if generate_field_string(
-        &mut headers.proxy_authorization,
-        &current,
-        "Proxy-Authorization: ",
-    ) {
+    if generate_field_string(&mut headers.proxy_authorization, &current, "Proxy-Authorization: ") {
         return;
     }
     if generate_field_string(&mut headers.range, &current, "Range: ") {
