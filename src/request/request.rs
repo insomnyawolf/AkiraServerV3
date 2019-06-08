@@ -27,7 +27,7 @@ pub struct Request {
 
 impl Request {
     /// Parse request and headers from byte buffer
-    pub fn parse(mut stream: &TcpStream, timeout: Option<Duration>) -> Request {
+    pub fn parse(stream: &TcpStream, timeout: Option<Duration>) -> Request {
         // Create Structure with default values
         let mut req = Request::default();
         let mut form_data = FormData::default();
@@ -38,11 +38,11 @@ impl Request {
 
         stream.set_read_timeout(timeout).ok();
         // Read bytes for the specified timeout
-        stream.read_to_end(&mut buffer_full).ok();
+        stream.to_owned().read_to_end(&mut buffer_full).ok();
 
         //Parse request data
         req.raw = unsafe { String::from_utf8_unchecked(buffer_full) }
-            .to_string()
+            .to_owned()
             .replace('\u{0}', "");
 
         //println!("{}", &req.raw);
@@ -50,16 +50,16 @@ impl Request {
         let request_arr: Vec<&str> = req.raw.splitn(3, ' ').collect();
 
         if request_arr.len() >= 3 {
-            req.method = Method::from_str(&request_arr[0].to_string());
+            req.method = Method::from_str(&request_arr[0].to_owned());
 
             let rs: Vec<&str> = request_arr[2].splitn(2, "\r\n\r\n").collect();
             for part in rs {
                 if part.starts_with("HTTP") {
                     headers = RequestHeaders::parse(part);
-                } else if part.contains(&headers.content_bounds) && &headers.content_bounds != "" {
-                    form_data.add_multipart(part.to_string(), &headers.content_bounds);
+                } else if part.contains(&headers.content_bounds) && &headers.content_bounds != &"" {
+                    form_data.add_multipart(part.to_owned(), &headers.content_bounds.to_owned());
                 } else if part.contains("=") {
-                    form_data.add_url_encoded(part.to_string());
+                    form_data.add_url_encoded(part.to_owned());
                 } else {
                     if part != "" {
                         println!("Failed to parse:\n{}\n", part);
@@ -71,12 +71,12 @@ impl Request {
 
             match percent_encoding::percent_decode(request_arr[1].as_bytes()).decode_utf8() {
                 Ok(value) => {
-                    req.path = value.trim_start_matches("/..").to_string();
+                    req.path = value.trim_start_matches("/..").to_owned();
                     req.is_valid_request = true;
-                }
+                },
                 Err(err) => {
                     log_warning(&err);
-                }
+                },
             }
         }
         req.other = Other::parse(stream);
@@ -85,11 +85,11 @@ impl Request {
 
     /// Obtains resource path relative to the specified location
     pub fn get_local_path(&self, root_folder: &String) -> String {
-        root_folder.to_string() + &self.path
+        root_folder.to_owned() + &self.path
     }
 
     /// Returns Raw String
     pub fn get_raw(&self) -> String {
-        self.raw.to_string()
+        self.raw.to_owned()
     }
 }

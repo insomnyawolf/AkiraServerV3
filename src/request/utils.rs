@@ -4,7 +4,7 @@ use crate::utils::log::log_warning;
 /// If starts with the pattern, removes the pattern and stores the remeaning data to the field
 /// as `` String ``
 pub fn generate_field_string(data: &str) -> String {
-    return data.to_string();
+    return data.to_owned();
 }
 
 /// Check if the string estarts with the defined pattern
@@ -14,7 +14,7 @@ pub fn generate_field_string_vec(data: &str) -> Vec<String> {
     let mut v: Vec<String> = Vec::new();
     let da: Vec<&str> = data.split(" ").collect();
     for d in da {
-        v.push(d.to_string());
+        v.push(d.to_owned());
     }
     return v;
 }

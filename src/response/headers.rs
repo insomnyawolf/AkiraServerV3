@@ -23,7 +23,8 @@ pub struct ResponseHeaders {
     pub age: String,
     /// Valid methods for a specified resource. To be used for a 405 Method not allowed
     pub allow: String,
-    /// Tells all caching mechanisms from server to client whether they may cache this object. It is measured in seconds
+    /// Tells all caching mechanisms from server to client whether they may cache this object. It is
+    /// measured in seconds
     pub cache_control: String,
     /// Control options for the current connection and list of hop-by-hop response fields.
     pub connection: String,
@@ -65,7 +66,8 @@ pub struct ResponseHeaders {
     a lot of websites set this field with fake policy text,
     that was enough to fool browsers the existence of P3P policy and grant permissions for third party cookies. **/
     pub p3p: String,
-    /// Implementation-specific fields that may have various effects anywhere along the request-response chain.
+    /// Implementation-specific fields that may have various effects anywhere along the
+    /// request-response chain.
     pub pragma: String,
     /// Request authentication to access the proxy
     pub proxy_authenticate: String,
@@ -79,17 +81,21 @@ pub struct ResponseHeaders {
     pub server: String,
     /// An HTTP cookie
     pub set_cookie: String,
-    /// A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains
+    /// A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether
+    /// this applies to subdomains
     pub strict_transport_security: String,
-    /// The Trailer general field value indicates that the given set of header fields is present in the trailer of a message encoded with chunked transfer coding
+    /// The Trailer general field value indicates that the given set of header fields is present in
+    /// the trailer of a message encoded with chunked transfer coding
     pub trailer: String,
-    /// The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity
+    /// The form of encoding used to safely transfer the entity to the user. Currently defined
+    /// methods are: chunked, compress, deflate, gzip, identity
     pub transfer_encoding: TransferEncoding,
     /// Tracking Status header, value suggested to be sent in response to a DNT(do-not-track)
     pub tracking_status: String,
     /// Ask the client to upgrade to another protocol
     pub upgrade: String,
-    /// Tells downstream proxies how to match future request headers to decide whether the cached response can be used rather than requesting a fresh one from the origin server
+    /// Tells downstream proxies how to match future request headers to decide whether the cached
+    /// response can be used rather than requesting a fresh one from the origin server
     pub vary: String,
     /// Informs the client of proxies through which the response was sent.
     pub via: String,
@@ -116,7 +122,7 @@ impl ResponseHeaders {
     }
     /// Sets cross origin request from all sources to acepted
     pub fn set_cross_origin_allow_all(&mut self) {
-        self.access_control_allow_origin = "*".to_string();
+        self.access_control_allow_origin = "*".to_owned();
     }
     /// Sets cross origin request from defined source to acepted
     pub fn set_cross_origin_allow_host(&mut self, host: String) {
@@ -136,10 +142,7 @@ impl ResponseHeaders {
         headers.extend_from_slice(&self.status.as_bytes());
         // Cors
         if self.access_control_allow_origin != "" {
-            let s = format!(
-                "Access-Control-Allow-Origin: {}\r\n",
-                &self.access_control_allow_origin
-            );
+            let s = format!("Access-Control-Allow-Origin: {}\r\n", &self.access_control_allow_origin);
             headers.extend_from_slice(s.as_bytes());
         }
         // Content Lenght

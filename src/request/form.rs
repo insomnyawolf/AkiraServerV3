@@ -27,7 +27,7 @@ impl FormData {
                         .to_string(),
                 });
             } else {
-                self.other.push(field.to_string());
+                self.other.push(field.to_owned());
             }
         }
     }
@@ -39,7 +39,7 @@ impl FormData {
             if element_str != "\r\n" || element_str != "" {
                 let content_disposition = "Content-Disposition: form-data; ";
                 if element_str.contains(content_disposition) {
-                    let element = MultipartFormElement::new(element_str.replace(content_disposition, "").to_string());
+                    let element = MultipartFormElement::new(element_str.replace(content_disposition, "").to_owned());
                     if element.is_file {
                         self.multipart_file.push(MultipartFile::new(element));
                     } else {
@@ -47,7 +47,7 @@ impl FormData {
                     }
                 } else {
                     if element_str != "--" && element_str != "--\r\n" {
-                        self.other.push(element_str.to_string());
+                        self.other.push(element_str.to_owned());
                     }
                 }
             }
@@ -123,7 +123,7 @@ impl MultipartFormElement {
         let len = data.len();
 
         if len > 1 {
-            let info: Vec<&str> = data.clone()[0].split("\r\n").collect();
+            let info: Vec<&str> = data[0].split("\r\n").collect();
             for current in info {
                 if current.starts_with("Content-Type: ") {
                     element.content_type = generate_field_string(&current.trim_start_matches("Content-Type: "));
@@ -138,20 +138,20 @@ impl MultipartFormElement {
                             element.filename = generate_field_string(&i.trim_start_matches("filename=\""));
                             element.filename = element.filename.replace("\"", "");
                         } else {
-                            element.other.push(i.to_string());
+                            element.other.push(i.to_owned());
                         }
                     }
                 }
             }
-        } else {
-            for s in &data[2..] {
-                element.other.push(s.to_string());
-            }
-        }
+        } /*else {  //Unreachable code?
+              for s in &data[2..] {
+                  element.other.push(s.to_string();
+              }
+          }*/
         if element.is_file {
             element.file = generate_field_vec_u8(&data[1]);
         } else {
-            element.content = data[1].to_string();
+            element.content = data[1].to_owned();
         }
         element
     }

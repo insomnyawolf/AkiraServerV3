@@ -35,10 +35,10 @@ pub fn handle_get(mut stream: &TcpStream, request: &Request) {
                 } else {
                     log_error(&"The target is neither a file or a directory.");
                 }
-            }
+            },
             Err(err) => {
                 log_warning(&err);
-            }
+            },
         }
     } else {
         let mut headers = ResponseHeaders::new(HttpStatus::NotFound);
@@ -57,10 +57,10 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
     match mime {
         Some(value) => {
             headers.set_content_type(value.to_string());
-        }
+        },
         None => {
             log_warning(&"No mime found");
-        }
+        },
     };
     let headers_processed = headers.get_headers();
 
@@ -84,8 +84,8 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
                         Err(err) => {
                             log_error(&err);
                             break;
-                        }
-                        Ok(_value) => {}
+                        },
+                        Ok(_value) => {},
                     }
                     buffer.len()
                 };
@@ -94,10 +94,10 @@ fn serve_file(mut stream: &TcpStream, meta: Metadata, path: &Path) {
                 }
                 reader.consume(length);
             }
-        }
+        },
         Err(err) => {
             log_error(&err);
-        }
+        },
     }
 }
 
@@ -109,17 +109,17 @@ fn serve_directory(mut stream: &TcpStream, request: &Request) {
     for file in &content.files {
         for name in &APP_CONFIG.server.index {
             if file == name {
-                let file: String = request_path.to_string() + &file;
+                let file: String = request_path.to_owned() + &file;
 
                 let p: &Path = std::path::Path::new(&file);
 
                 match fs::metadata(p) {
                     Ok(value) => {
                         serve_file(stream, value, p);
-                    }
+                    },
                     Err(err) => {
                         log_error(&err);
-                    }
+                    },
                 }
                 return;
             }
@@ -224,11 +224,9 @@ fn list_directory(content: DirContent, path: &String) -> String {
 }
 
 fn percent_encode(link: &String, is_dir: bool) -> String {
-    let encoded = percent_encoding::utf8_percent_encode(
-        &link.replace('%', "%25"),
-        percent_encoding::DEFAULT_ENCODE_SET,
-    )
-    .to_string();
+    let encoded =
+        percent_encoding::utf8_percent_encode(&link.replace('%', "%25"), percent_encoding::DEFAULT_ENCODE_SET)
+            .to_string();
     if is_dir {
         encoded + "\\"
     } else {
@@ -238,8 +236,7 @@ fn percent_encode(link: &String, is_dir: bool) -> String {
 
 fn get_web_path(full_path: String, current_dir: &String) -> String {
     let temp = full_path.replace(current_dir, "");
-    temp.trim_start_matches(&APP_CONFIG.server.root_folder)
-        .to_string()
+    temp.trim_start_matches(&APP_CONFIG.server.root_folder).to_owned()
 }
 
 #[derive(Default, Debug)]
@@ -266,16 +263,16 @@ impl DirContent {
                             } else if md.is_file() {
                                 content.files.push(web_path);
                             }
-                        }
+                        },
                         Err(err) => {
                             log_error(&err);
-                        }
+                        },
                     }
                 }
-            }
+            },
             Err(err) => {
                 log_error(&err);
-            }
+            },
         }
         content
     }

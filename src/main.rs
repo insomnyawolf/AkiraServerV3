@@ -83,9 +83,7 @@ fn server() {
         }
     };
 
-    listener
-        .set_ttl(APP_CONFIG.server.ttl)
-        .expect("could not set TTL");
+    listener.set_ttl(APP_CONFIG.server.ttl).expect("could not set TTL");
 
     // Bucle para cada peticion tcp
     for stream in listener.incoming() {
