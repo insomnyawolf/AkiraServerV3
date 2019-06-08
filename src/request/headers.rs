@@ -108,13 +108,13 @@ impl RequestHeaders {
 }
 
 fn parse_header(headers: &mut RequestHeaders, current: &str) {
-    let header: Vec<&str> = current.rsplit(": ").collect();
+    let header: Vec<&str> = current.split(": ").collect();
 
     if header.len() == 2 {
         match header[0] {
             "A-IM" => {
                 headers.acceptable_instance_manipulations = header[1].to_owned();
-            },
+            }
             "Accept" => {
                 //values = &values.replace(";", ",")[..];
                 let arr: Vec<&str> = header[1].split(";").collect();
@@ -122,38 +122,38 @@ fn parse_header(headers: &mut RequestHeaders, current: &str) {
                 for data in arr {
                     headers.accept.push(generate_field_string(data));
                 }
-            },
+            }
             "Accept-Charset" => {
                 headers.accept_charset = header[1].to_owned();
-            },
+            }
             "Accept-Encoding" => {
                 headers.accept_encoding = generate_field_string_vec(header[1]);
-            },
+            }
             "Accept-Language" => {
                 headers.accept_language = header[1].to_owned();
-            },
+            }
             "Accept-Datetime" => {
                 headers.accept_datetime = header[1].to_owned();
-            },
+            }
             "Access-Control-Request-Method" => {
                 headers.access_control_request_method = generate_field_string(header[1]);
-            },
+            }
             "Authorization" => {
                 headers.authorization = generate_field_string(header[1]);
-            },
+            }
 
             "Cache-Control" => {
                 headers.cache_control = generate_field_string(header[1]);
-            },
+            }
             "Connection" => {
                 headers.connection = generate_field_string(header[1]);
-            },
+            }
             "Content-Length" => {
                 headers.content_length = generate_field_u64(header[1]);
-            },
+            }
             "Content-MD5" => {
                 headers.content_md5 = generate_field_string(header[1]);
-            },
+            }
             "Content-Type" => {
                 headers.content_type = generate_field_string(header[1]);
                 let t: Vec<&str> = current.split("; ").collect();
@@ -169,64 +169,64 @@ fn parse_header(headers: &mut RequestHeaders, current: &str) {
                         headers.content_bounds = generate_field_string(bounds);
                     }
                 }
-            },
+            }
             "Cookie" => {
                 headers.cookie = generate_field_string(header[1]);
-            },
+            }
             "Date" => {
                 headers.date = generate_field_string(header[1]);
-            },
+            }
             "Expect" => {
                 headers.expect = generate_field_string(header[1]);
-            },
+            }
             "Forwarded" => {
                 headers.forwarded = generate_field_string(header[1]);
-            },
+            }
             "From" => {
                 headers.from = generate_field_string(header[1]);
-            },
+            }
             "Host" => {
                 headers.host = generate_field_string(header[1]);
-            },
+            }
             "Max-Forwards" => {
                 headers.max_forwards = generate_field_string(header[1]);
-            },
+            }
             "Origin" => {
                 headers.origin = generate_field_string(header[1]);
-            },
+            }
             "Pragma" => {
                 headers.pragma = generate_field_string(header[1]);
-            },
+            }
             "Proxy-Authorization" => {
                 headers.proxy_authorization = generate_field_string(header[1]);
-            },
+            }
             "Range" => {
                 headers.range = generate_field_string(header[1]);
-            },
+            }
             "Referer" => {
                 headers.referer = generate_field_string(header[1]);
-            },
+            }
             "TE" => {
                 headers.transfer_encodings = generate_field_string(header[1]);
-            },
+            }
             "User-Agent" => {
                 headers.user_agent = generate_field_string(header[1]);
-            },
+            }
             "Via" => {
                 headers.via = generate_field_string(header[1]);
-            },
+            }
             "Warning" => {
                 headers.warning = generate_field_string(header[1]);
-            },
+            }
             "Upgrade-Insecure-Requests" => {
                 headers.upgrade_insecure_requests = generate_field_string(header[1]);
-            },
+            }
             "DNT" => {
                 headers.dnt = generate_field_string(header[1]);
-            },
+            }
             _ => {
                 headers.other.push(generate_field_string(current));
-            },
+            }
         }
     } else {
         if start_with(&current, "HTTP/") {
